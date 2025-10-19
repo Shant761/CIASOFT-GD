@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>Учет зарплат - CIA SOFT</title>
+<title>Учет зарплат и расходов - CIA SOFT</title>
 <style>
   :root {
     --bg: #0f1724; 
@@ -13,6 +13,10 @@
     --accent-light: #2bd4c3;
     --danger: #ff6b6b;
     --danger-light: #ff8e8e;
+    --warning: #ffa726;
+    --warning-light: #ffb74d;
+    --success: #4caf50;
+    --success-light: #66bb6a;
     --glass: rgba(255,255,255,0.03);
     --glass-light: rgba(255,255,255,0.06);
     --radius: 12px;
@@ -30,7 +34,7 @@
   }
   
   .app {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 24px auto;
     padding: 16px;
   }
@@ -280,6 +284,14 @@
     border-left-color: var(--danger);
   }
   
+  .entry.expense {
+    border-left-color: var(--warning);
+  }
+  
+  .entry.revenue {
+    border-left-color: var(--success);
+  }
+  
   .entry .left {
     flex: 1;
   }
@@ -296,6 +308,16 @@
   
   .entry .amount.expense {
     color: var(--danger-light);
+    font-weight: 700;
+  }
+  
+  .entry .amount.cost {
+    color: var(--warning-light);
+    font-weight: 700;
+  }
+  
+  .entry .amount.revenue {
+    color: var(--success-light);
     font-weight: 700;
   }
   
@@ -453,6 +475,18 @@
     font-size: 10px;
   }
   
+  .badge.expense-category {
+    background: rgba(255, 167, 38, 0.15);
+    color: var(--warning-light);
+    font-size: 10px;
+  }
+  
+  .badge.revenue {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--success-light);
+    font-size: 10px;
+  }
+  
   .empty-state {
     text-align: center;
     padding: 30px 20px;
@@ -479,6 +513,30 @@
     font-weight: 600;
     background: rgba(155, 89, 182, 0.15);
     color: #bb86fc;
+  }
+  
+  .expense-category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(255, 167, 38, 0.15);
+    color: var(--warning-light);
+  }
+  
+  .revenue-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--success-light);
   }
   
   .login-screen {
@@ -533,13 +591,49 @@
     25% { transform: translateX(-8px); }
     75% { transform: translateX(8px); }
   }
+  
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--glass-light);
+    padding-bottom: 8px;
+  }
+  
+  .tab {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+  }
+  
+  .tab.active {
+    background: var(--glass);
+    color: var(--accent-light);
+  }
+  
+  .tab:hover:not(.active) {
+    background: rgba(255,255,255,0.03);
+  }
+  
+  .profit-positive {
+    color: var(--success-light);
+  }
+  
+  .profit-negative {
+    color: var(--danger-light);
+  }
 </style>
 </head>
 <body>
 <!-- Экран входа -->
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
-    <h2>🔐 Учет зарплат</h2>
+    <h2>🔐 Учет зарплат и расходов</h2>
     <p>Введите пароль для доступа к системе</p>
     <div style="margin-bottom: 20px;">
       <input type="password" id="passwordInput" placeholder="Введите пароль" style="text-align: center; font-size: 16px;" />
@@ -554,7 +648,7 @@
 <!-- Основное приложение -->
 <div id="appContent" class="app hidden">
   <header>
-    <h1>Учет зарплат • CIA SOFT</h1>
+    <h1>Учет зарплат и расходов • CIA SOFT</h1>
     <div class="controls">
       <button id="btnExport" class="btn ghost" title="Экспорт CSV">
         <span>📊</span> Экспорт CSV
@@ -572,41 +666,101 @@
     <!-- left: operations -->
     <div>
       <div class="card">
-        <div class="section-title">
-          <h3>Сотрудники</h3>
+        <div class="tabs">
+          <button class="tab active" data-tab="employees">Сотрудники</button>
+          <button class="tab" data-tab="expenses">Расходы</button>
+          <button class="tab" data-tab="revenue">Выручка</button>
         </div>
         
-        <div class="form-row">
-          <div>
-            <label>Имя сотрудника</label>
-            <input id="newEmployeeName" type="text" placeholder="Введите имя"/>
+        <div id="employeesTab" class="tab-content">
+          <div class="form-row">
+            <div>
+              <label>Имя сотрудника</label>
+              <input id="newEmployeeName" type="text" placeholder="Введите имя"/>
+            </div>
+            <div>
+              <label>Категория</label>
+              <select id="newEmployeeCategory">
+                <option value="waiter">Официант</option>
+                <option value="cook">Повар</option>
+                <option value="manager">Менеджер</option>
+                <option value="cleaner">Уборщик</option>
+                <option value="barman">Бармен</option>
+                <option value="cashier">Кассир</option>
+                <option value="books">Книги</option>
+                <option value="mangal">Мангал</option>
+                <option value="confectionery">Кондитерская</option>
+                <option value="custom">Другая</option>
+              </select>
+            </div>
+            <div>
+              <label>Дневная ставка</label>
+              <input id="newEmployeeSalary" type="number" placeholder="0.00" step="0.01" />
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <button id="addEmployee" class="btn" style="width:100%">Добавить</button>
+            </div>
           </div>
-          <div>
-            <label>Категория</label>
-            <select id="newEmployeeCategory">
-              <option value="waiter">Официант</option>
-              <option value="cook">Повар</option>
-              <option value="manager">Менеджер</option>
-              <option value="cleaner">Уборщик</option>
-              <option value="barman">Бармен</option>
-              <option value="cashier">Кассир</option>
-              <option value="books">Книги</option>
-              <option value="mangal">Мангал</option>
-              <option value="confectionery">Кондитерская</option>
-              <option value="custom">Другая</option>
-            </select>
-          </div>
-          <div>
-            <label>Дневная ставка</label>
-            <input id="newEmployeeSalary" type="number" placeholder="0.00" step="0.01" />
-          </div>
-          <div>
-            <label>&nbsp;</label>
-            <button id="addEmployee" class="btn" style="width:100%">Добавить</button>
-          </div>
+          
+          <div class="points" id="employeesList" aria-live="polite"></div>
         </div>
         
-        <div class="points" id="employeesList" aria-live="polite"></div>
+        <div id="expensesTab" class="tab-content hidden">
+          <div class="form-row">
+            <div>
+              <label>Категория расхода</label>
+              <select id="expenseCategory">
+                <option value="taxi">🚕 Такси</option>
+                <option value="purchase">🛒 Закуп</option>
+                <option value="utilities">💡 Коммунальные</option>
+                <option value="rent">🏠 Аренда</option>
+                <option value="marketing">📢 Маркетинг</option>
+                <option value="equipment">⚙️ Оборудование</option>
+                <option value="other">📦 Прочее</option>
+              </select>
+            </div>
+            <div>
+              <label>Сумма</label>
+              <input id="expenseAmount" type="number" placeholder="0.00" step="0.01" />
+            </div>
+            <div>
+              <label>Дата</label>
+              <input id="expenseDate" type="date" />
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div style="flex:2">
+              <label>Описание</label>
+              <input id="expenseNote" type="text" placeholder="комментарий" />
+            </div>
+          </div>
+          
+          <button id="addExpense" class="btn">Добавить расход</button>
+        </div>
+        
+        <div id="revenueTab" class="tab-content hidden">
+          <div class="form-row">
+            <div>
+              <label>Сумма выручки</label>
+              <input id="revenueAmount" type="number" placeholder="0.00" step="0.01" />
+            </div>
+            <div>
+              <label>Дата</label>
+              <input id="revenueDate" type="date" />
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div style="flex:2">
+              <label>Описание</label>
+              <input id="revenueNote" type="text" placeholder="комментарий" />
+            </div>
+          </div>
+          
+          <button id="addRevenue" class="btn">Добавить выручку</button>
+        </div>
 
         <hr>
 
@@ -654,12 +808,15 @@
             <div style="display:flex;gap:10px;flex-wrap:wrap">
               <select id="filterEmployee"><option value="all">Все сотрудники</option></select>
               <select id="filterCategory"><option value="all">Все категории</option></select>
+              <select id="filterExpenseCategory"><option value="all">Все расходы</option></select>
               <input id="filterFrom" type="date" />
               <input id="filterTo" type="date" />
               <select id="filterType">
                 <option value="all">Все операции</option>
                 <option value="salary">Начисления</option>
                 <option value="payout">Выплаты</option>
+                <option value="expense">Расходы</option>
+                <option value="revenue">Выручка</option>
               </select>
             </div>
           </div>
@@ -677,19 +834,32 @@
     <div class="rightPanel">
       <div class="card">
         <div class="section-title">
-          <h3>Итоги</h3>
+          <h3>Финансовый обзор</h3>
         </div>
         
         <div class="summary" id="summaryTiles">
           <div class="tile"><h3>Начислено</h3><p id="sumAccrued">0</p></div>
           <div class="tile"><h3>Выплачено</h3><p id="sumPaid">0</p></div>
           <div class="tile"><h3>Задолженность</h3><p id="sumDebt">0</p></div>
+          <div class="tile"><h3>Расходы</h3><p id="sumExpenses">0</p></div>
+          <div class="tile"><h3>Выручка</h3><p id="sumRevenue">0</p></div>
+          <div class="tile"><h3>Чистая прибыль</h3><p id="netProfit">0</p></div>
         </div>
 
         <hr>
 
         <h4 style="margin:6px 0">По сотрудникам</h4>
         <div id="employeesSummary" style="display:flex;flex-direction:column;gap:10px"></div>
+
+        <hr>
+
+        <h4 style="margin:6px 0">По категориям расходов</h4>
+        <div id="expensesSummary" style="display:flex;flex-direction:column;gap:10px"></div>
+
+        <hr>
+
+        <h4 style="margin:6px 0">Выручка по дням</h4>
+        <div id="revenueSummary" style="display:flex;flex-direction:column;gap:10px"></div>
 
         <hr>
 
@@ -735,19 +905,22 @@
 </div>
 
 <script>
-/* Учет зарплат — хранение в localStorage.
+/* Учет зарплат и расходов — хранение в localStorage.
    Структура:
    state = { 
      employees: [{id,name,category,dailyRate,lastPayoutDate}], 
-     ops: [{id,employeeId,type,amount,date,note,createdAt}] 
+     ops: [{id,employeeId,type,amount,date,note,createdAt}],
+     expenses: [{id,category,amount,date,note,createdAt}],
+     revenue: [{id,amount,date,note,createdAt}]
    }
 */
 (function(){
-  const LS_KEY = 'salary_book_v3';
+  const LS_KEY = 'salary_expense_revenue_book_v1';
   const PASSWORD_KEY = 'salary_book_password';
-  let state = { employees: [], ops: [] };
+  let state = { employees: [], ops: [], expenses: [], revenue: [] };
   let selectedEmployee = null;
   let isAuthenticated = false;
+  let activeTab = 'employees';
 
   // Категории сотрудников с иконками и ставками по умолчанию
   const categories = {
@@ -761,6 +934,17 @@
     mangal: { name: 'Мангал', icon: '🔥', defaultRate: 1900 },
     confectionery: { name: 'Кондитерская', icon: '🍰', defaultRate: 1600 },
     custom: { name: 'Другая', icon: '👤', defaultRate: 1500 }
+  };
+
+  // Категории расходов
+  const expenseCategories = {
+    taxi: { name: 'Такси', icon: '🚕' },
+    purchase: { name: 'Закуп', icon: '🛒' },
+    utilities: { name: 'Коммунальные', icon: '💡' },
+    rent: { name: 'Аренда', icon: '🏠' },
+    marketing: { name: 'Маркетинг', icon: '📢' },
+    equipment: { name: 'Оборудование', icon: '⚙️' },
+    other: { name: 'Прочее', icon: '📦' }
   };
 
   // элементы
@@ -782,10 +966,16 @@
   const sumAccrued = document.getElementById('sumAccrued');
   const sumPaid = document.getElementById('sumPaid');
   const sumDebt = document.getElementById('sumDebt');
+  const sumExpenses = document.getElementById('sumExpenses');
+  const sumRevenue = document.getElementById('sumRevenue');
+  const netProfit = document.getElementById('netProfit');
   const employeesSummary = document.getElementById('employeesSummary');
+  const expensesSummary = document.getElementById('expensesSummary');
+  const revenueSummary = document.getElementById('revenueSummary');
   const totalBalance = document.getElementById('totalBalance');
   const filterEmployee = document.getElementById('filterEmployee');
   const filterCategory = document.getElementById('filterCategory');
+  const filterExpenseCategory = document.getElementById('filterExpenseCategory');
   const filterFrom = document.getElementById('filterFrom');
   const filterTo = document.getElementById('filterTo');
   const filterType = document.getElementById('filterType');
@@ -801,6 +991,19 @@
   const payoutProgress = document.getElementById('payoutProgress');
   const btnAutoSalary = document.getElementById('btnAutoSalary');
   const btnPayout = document.getElementById('btnPayout');
+  const tabs = document.querySelectorAll('.tab');
+  const employeesTab = document.getElementById('employeesTab');
+  const expensesTab = document.getElementById('expensesTab');
+  const revenueTab = document.getElementById('revenueTab');
+  const expenseCategorySelect = document.getElementById('expenseCategory');
+  const expenseAmount = document.getElementById('expenseAmount');
+  const expenseDate = document.getElementById('expenseDate');
+  const expenseNote = document.getElementById('expenseNote');
+  const addExpenseBtn = document.getElementById('addExpense');
+  const revenueAmount = document.getElementById('revenueAmount');
+  const revenueDate = document.getElementById('revenueDate');
+  const revenueNote = document.getElementById('revenueNote');
+  const addRevenueBtn = document.getElementById('addRevenue');
 
   // utils
   const uid = (n=8)=> Math.random().toString(36).slice(2,2+n);
@@ -818,7 +1021,7 @@
         state = JSON.parse(raw); 
       }catch(e){ 
         console.error(e); 
-        state={employees:[],ops:[]}; 
+        state={employees:[],ops:[],expenses:[], revenue:[]}; 
       } 
     } 
     if (isAuthenticated) {
@@ -870,8 +1073,27 @@
   });
   btnLock.addEventListener('click', logout);
 
+  // Переключение вкладок
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      activeTab = tabName;
+      
+      // Обновляем активную вкладку
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Показываем соответствующий контент
+      employeesTab.classList.toggle('hidden', tabName !== 'employees');
+      expensesTab.classList.toggle('hidden', tabName !== 'expenses');
+      revenueTab.classList.toggle('hidden', tabName !== 'revenue');
+    });
+  });
+
   // init date default = today
   opDate.valueAsDate = new Date();
+  expenseDate.valueAsDate = new Date();
+  revenueDate.valueAsDate = new Date();
 
   // Заполняем категории в селекте
   function populateCategorySelect() {
@@ -912,6 +1134,52 @@
     newEmployeeName.value = '';
     newEmployeeSalary.value = '';
     selectedEmployee = id;
+    save();
+  });
+
+  // add expense
+  addExpenseBtn.addEventListener('click', ()=>{
+    if (!isAuthenticated) return;
+    
+    const category = expenseCategorySelect.value;
+    const amount = parseFloat(expenseAmount.value);
+    const date = expenseDate.value || new Date().toISOString().slice(0,10);
+    const note = (expenseNote.value||'').trim();
+    
+    if(isNaN(amount) || amount <= 0) return alert('Введите корректную сумму расхода');
+    if(!category) return alert('Выберите категорию расхода');
+    
+    const id = uid(9);
+    state.expenses.push({
+      id, category, amount, date, note, 
+      createdAt: new Date().toISOString()
+    });
+    
+    // clear form
+    expenseAmount.value = '';
+    expenseNote.value = '';
+    save();
+  });
+
+  // add revenue
+  addRevenueBtn.addEventListener('click', ()=>{
+    if (!isAuthenticated) return;
+    
+    const amount = parseFloat(revenueAmount.value);
+    const date = revenueDate.value || new Date().toISOString().slice(0,10);
+    const note = (revenueNote.value||'').trim();
+    
+    if(isNaN(amount) || amount <= 0) return alert('Введите корректную сумму выручки');
+    
+    const id = uid(9);
+    state.revenue.push({
+      id, amount, date, note, 
+      createdAt: new Date().toISOString()
+    });
+    
+    // clear form
+    revenueAmount.value = '';
+    revenueNote.value = '';
     save();
   });
 
@@ -977,6 +1245,7 @@
     // populate filter select
     filterEmployee.innerHTML = '<option value="all">Все сотрудники</option>';
     filterCategory.innerHTML = '<option value="all">Все категории</option>';
+    filterExpenseCategory.innerHTML = '<option value="all">Все расходы</option>';
     autoEmployee.innerHTML = '<option value="">Выберите сотрудника</option>';
     
     // Добавляем категории в фильтр
@@ -985,6 +1254,14 @@
       option.value = key;
       option.textContent = `${category.icon} ${category.name}`;
       filterCategory.appendChild(option);
+    }
+    
+    // Добавляем категории расходов в фильтр
+    for (const [key, category] of Object.entries(expenseCategories)) {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = `${category.icon} ${category.name}`;
+      filterExpenseCategory.appendChild(option);
     }
     
     // Добавляем сотрудников в фильтры
@@ -1005,11 +1282,13 @@
   function renderEntries(){
     const fEmployee = filterEmployee.value;
     const fCategory = filterCategory.value;
+    const fExpenseCategory = filterExpenseCategory.value;
     const from = filterFrom.value;
     const to = filterTo.value;
     const fType = filterType.value;
     
-    const filtered = state.ops
+    // Фильтруем операции по зарплатам
+    const filteredOps = state.ops
       .filter(op=>{
         const employee = state.employees.find(e => e.id === op.employeeId);
         if(!employee) return false;
@@ -1020,11 +1299,36 @@
         if(to && op.date > to) return false;
         if(fType !== 'all' && op.type !== fType) return false;
         return true;
-      })
-      .sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+      });
+    
+    // Фильтруем расходы
+    const filteredExpenses = state.expenses
+      .filter(expense=>{
+        if(fExpenseCategory !== 'all' && expense.category !== fExpenseCategory) return false;
+        if(from && expense.date < from) return false;
+        if(to && expense.date > to) return false;
+        if(fType !== 'all' && fType !== 'expense') return false;
+        return true;
+      });
+    
+    // Фильтруем выручку
+    const filteredRevenue = state.revenue
+      .filter(revenue=>{
+        if(from && revenue.date < from) return false;
+        if(to && revenue.date > to) return false;
+        if(fType !== 'all' && fType !== 'revenue') return false;
+        return true;
+      });
+    
+    // Объединяем и сортируем
+    const allEntries = [
+      ...filteredOps.map(op => ({...op, entryType: 'op'})),
+      ...filteredExpenses.map(expense => ({...expense, entryType: 'expense', type: 'expense'})),
+      ...filteredRevenue.map(revenue => ({...revenue, entryType: 'revenue', type: 'revenue'}))
+    ].sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
 
     entriesList.innerHTML = '';
-    if(filtered.length === 0){
+    if(allEntries.length === 0){
       entriesList.innerHTML = `
         <div class="empty-state">
           <div class="icon">📋</div>
@@ -1033,32 +1337,79 @@
       `;
       return;
     }
+    
     const frag = document.createDocumentFragment();
-    filtered.forEach(op=>{
+    allEntries.forEach(entry=>{
       const row = document.createElement('div'); 
-      row.className = `entry ${op.type}`;
+      row.className = `entry ${entry.type}`;
       const left = document.createElement('div'); left.className='left';
-      const employee = state.employees.find(e=>e.id===op.employeeId) || {name:'—', category: 'custom'};
-      const category = categories[employee.category] || categories.custom;
       
-      left.innerHTML = `
-        <div style="font-weight:700">${clampStr(op.note || (op.type === 'salary' ? 'Начисление зарплаты' : 'Выплата'), 50)}</div>
-        <div class="tiny muted">
-          ${category.icon} ${employee.name} 
-          <span class="badge category">${category.name}</span>
-          • ${op.date}
-        </div>`;
+      if (entry.entryType === 'op') {
+        const employee = state.employees.find(e=>e.id===entry.employeeId) || {name:'—', category: 'custom'};
+        const category = categories[employee.category] || categories.custom;
+        
+        left.innerHTML = `
+          <div style="font-weight:700">${clampStr(entry.note || (entry.type === 'salary' ? 'Начисление зарплаты' : 'Выплата'), 50)}</div>
+          <div class="tiny muted">
+            ${category.icon} ${employee.name} 
+            <span class="badge category">${category.name}</span>
+            • ${entry.date}
+          </div>`;
+        
+        const right = document.createElement('div'); right.className='right';
+        right.innerHTML = `
+          <div class="amount ${entry.type === 'salary' ? 'income' : 'expense'}">
+            ${entry.type==='salary'?'+':'-'} ${formatMoney(entry.amount)}
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+            <button class="btn ghost" data-id="${entry.id}" data-type="op">✎</button>
+            <button class="btn warn" data-del="${entry.id}" data-type="op">✕</button>
+          </div>`;
+        row.appendChild(left); row.appendChild(right);
+      } else if (entry.entryType === 'expense') {
+        // expense entry
+        const category = expenseCategories[entry.category] || expenseCategories.other;
+        
+        left.innerHTML = `
+          <div style="font-weight:700">${clampStr(entry.note || 'Расход', 50)}</div>
+          <div class="tiny muted">
+            ${category.icon} ${category.name} 
+            <span class="badge expense-category">${category.name}</span>
+            • ${entry.date}
+          </div>`;
+        
+        const right = document.createElement('div'); right.className='right';
+        right.innerHTML = `
+          <div class="amount cost">
+            - ${formatMoney(entry.amount)}
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+            <button class="btn ghost" data-id="${entry.id}" data-type="expense">✎</button>
+            <button class="btn warn" data-del="${entry.id}" data-type="expense">✕</button>
+          </div>`;
+        row.appendChild(left); row.appendChild(right);
+      } else {
+        // revenue entry
+        left.innerHTML = `
+          <div style="font-weight:700">${clampStr(entry.note || 'Выручка', 50)}</div>
+          <div class="tiny muted">
+            💰 Выручка
+            <span class="badge revenue">Выручка</span>
+            • ${entry.date}
+          </div>`;
+        
+        const right = document.createElement('div'); right.className='right';
+        right.innerHTML = `
+          <div class="amount revenue">
+            + ${formatMoney(entry.amount)}
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+            <button class="btn ghost" data-id="${entry.id}" data-type="revenue">✎</button>
+            <button class="btn warn" data-del="${entry.id}" data-type="revenue">✕</button>
+          </div>`;
+        row.appendChild(left); row.appendChild(right);
+      }
       
-      const right = document.createElement('div'); right.className='right';
-      right.innerHTML = `
-        <div class="amount ${op.type === 'salary' ? 'income' : 'expense'}">
-          ${op.type==='salary'?'+':'-'} ${formatMoney(op.amount)}
-        </div>
-        <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
-          <button class="btn ghost" data-id="${op.id}">✎</button>
-          <button class="btn warn" data-del="${op.id}">✕</button>
-        </div>`;
-      row.appendChild(left); row.appendChild(right);
       frag.appendChild(row);
     });
     entriesList.appendChild(frag);
@@ -1068,26 +1419,70 @@
       b.addEventListener('click', (e)=>{
         if (!isAuthenticated) return;
         const id = e.currentTarget.dataset.del;
+        const type = e.currentTarget.dataset.type;
         if(!confirm('Удалить операцию?')) return;
-        state.ops = state.ops.filter(o=>o.id!==id);
+        
+        if (type === 'op') {
+          state.ops = state.ops.filter(o=>o.id!==id);
+        } else if (type === 'expense') {
+          state.expenses = state.expenses.filter(exp=>exp.id!==id);
+        } else {
+          state.revenue = state.revenue.filter(rev=>rev.id!==id);
+        }
         save();
       });
     });
+    
     entriesList.querySelectorAll('button[data-id]').forEach(b=>{
       b.addEventListener('click', (e)=>{
         if (!isAuthenticated) return;
         const id = e.currentTarget.dataset.id;
-        const op = state.ops.find(o=>o.id===id);
-        if(!op) return;
-        // load into form for quick edit (simple replace)
-        selectedEmployee = op.employeeId;
-        selectEmployee(op.employeeId);
-        opType.value = op.type;
-        opAmount.value = op.amount;
-        opDate.value = op.date;
-        opNote.value = op.note;
-        // remove old
-        state.ops = state.ops.filter(o=>o.id!==id);
+        const type = e.currentTarget.dataset.type;
+        
+        if (type === 'op') {
+          const op = state.ops.find(o=>o.id===id);
+          if(!op) return;
+          // load into form for quick edit (simple replace)
+          selectedEmployee = op.employeeId;
+          selectEmployee(op.employeeId);
+          opType.value = op.type;
+          opAmount.value = op.amount;
+          opDate.value = op.date;
+          opNote.value = op.note;
+          // remove old
+          state.ops = state.ops.filter(o=>o.id!==id);
+        } else if (type === 'expense') {
+          const expense = state.expenses.find(exp=>exp.id===id);
+          if(!expense) return;
+          // load into form for quick edit
+          expenseCategorySelect.value = expense.category;
+          expenseAmount.value = expense.amount;
+          expenseDate.value = expense.date;
+          expenseNote.value = expense.note;
+          // remove old
+          state.expenses = state.expenses.filter(exp=>exp.id!==id);
+          // switch to expenses tab
+          tabs.forEach(t => t.classList.remove('active'));
+          document.querySelector('[data-tab="expenses"]').classList.add('active');
+          employeesTab.classList.add('hidden');
+          expensesTab.classList.remove('hidden');
+          activeTab = 'expenses';
+        } else {
+          const revenue = state.revenue.find(rev=>rev.id===id);
+          if(!revenue) return;
+          // load into form for quick edit
+          revenueAmount.value = revenue.amount;
+          revenueDate.value = revenue.date;
+          revenueNote.value = revenue.note;
+          // remove old
+          state.revenue = state.revenue.filter(rev=>rev.id!==id);
+          // switch to revenue tab
+          tabs.forEach(t => t.classList.remove('active'));
+          document.querySelector('[data-tab="revenue"]').classList.add('active');
+          employeesTab.classList.add('hidden');
+          revenueTab.classList.remove('hidden');
+          activeTab = 'revenue';
+        }
         save();
       });
     });
@@ -1095,15 +1490,34 @@
 
   // summary calculations
   function renderSummary(){
-    let accrued=0, paid=0;
+    let accrued=0, paid=0, expenses=0, revenue=0;
+    
     for(const op of state.ops){
       if(op.type === 'salary') accrued += Number(op.amount);
       else paid += Number(op.amount);
     }
+    
+    for(const expense of state.expenses){
+      expenses += Number(expense.amount);
+    }
+    
+    for(const rev of state.revenue){
+      revenue += Number(rev.amount);
+    }
+    
     const debt = accrued - paid;
+    const net = revenue - paid - expenses; // Чистая прибыль = выручка - выплаты - расходы
+    
     sumAccrued.textContent = formatMoney(accrued);
     sumPaid.textContent = formatMoney(paid);
     sumDebt.textContent = formatMoney(debt);
+    sumExpenses.textContent = formatMoney(expenses);
+    sumRevenue.textContent = formatMoney(revenue);
+    
+    // Отображаем чистую прибыль с цветом в зависимости от результата
+    netProfit.textContent = formatMoney(net);
+    netProfit.className = net >= 0 ? 'profit-positive' : 'profit-negative';
+    
     totalBalance.textContent = formatMoney(debt);
 
     // per employee
@@ -1115,36 +1529,114 @@
           <p>Нет сотрудников</p>
         </div>
       `;
-      return;
-    }
-    
-    for(const e of state.employees){
-      const acc = state.ops.filter(o=>o.employeeId===e.id && o.type==='salary').reduce((s,o)=>s+Number(o.amount),0);
-      const pay = state.ops.filter(o=>o.employeeId===e.id && o.type==='payout').reduce((s,o)=>s+Number(o.amount),0);
-      const balance = acc - pay;
-      const category = categories[e.category] || categories.custom;
-      
-      const el = document.createElement('div');
-      el.className = 'employee-card';
-      el.innerHTML = `
-        <div class="info">
-          <h4>${category.icon} ${e.name}</h4>
-          <div class="rate">${category.name} • ${formatMoney(e.dailyRate)}/день</div>
-        </div>
-        <div class="balance">
-          <div class="amount">${formatMoney(balance)}</div>
-          <div class="status">
-            <span class="badge ${balance >= 0 ? 'positive' : 'negative'}">
-              ${balance >= 0 ? 'Долг' : 'Переплата'}
-            </span>
+    } else {
+      for(const e of state.employees){
+        const acc = state.ops.filter(o=>o.employeeId===e.id && o.type==='salary').reduce((s,o)=>s+Number(o.amount),0);
+        const pay = state.ops.filter(o=>o.employeeId===e.id && o.type==='payout').reduce((s,o)=>s+Number(o.amount),0);
+        const balance = acc - pay;
+        const category = categories[e.category] || categories.custom;
+        
+        const el = document.createElement('div');
+        el.className = 'employee-card';
+        el.innerHTML = `
+          <div class="info">
+            <h4>${category.icon} ${e.name}</h4>
+            <div class="rate">${category.name} • ${formatMoney(e.dailyRate)}/день</div>
           </div>
+          <div class="balance">
+            <div class="amount">${formatMoney(balance)}</div>
+            <div class="status">
+              <span class="badge ${balance >= 0 ? 'positive' : 'negative'}">
+                ${balance >= 0 ? 'Долг' : 'Переплата'}
+              </span>
+            </div>
+          </div>
+        `;
+        
+        // Add click to select employee
+        el.addEventListener('click', () => selectEmployee(e.id));
+        
+        employeesSummary.appendChild(el);
+      }
+    }
+
+    // expenses by category
+    expensesSummary.innerHTML = '';
+    if (state.expenses.length === 0) {
+      expensesSummary.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">💰</div>
+          <p>Нет расходов</p>
         </div>
       `;
+    } else {
+      const expensesByCategory = {};
       
-      // Add click to select employee
-      el.addEventListener('click', () => selectEmployee(e.id));
+      for(const expense of state.expenses){
+        if(!expensesByCategory[expense.category]) {
+          expensesByCategory[expense.category] = 0;
+        }
+        expensesByCategory[expense.category] += Number(expense.amount);
+      }
       
-      employeesSummary.appendChild(el);
+      for(const [categoryKey, amount] of Object.entries(expensesByCategory)){
+        const category = expenseCategories[categoryKey] || expenseCategories.other;
+        
+        const el = document.createElement('div');
+        el.className = 'employee-card';
+        el.innerHTML = `
+          <div class="info">
+            <h4>${category.icon} ${category.name}</h4>
+            <div class="rate">${formatMoney(amount)} всего</div>
+          </div>
+          <div class="balance">
+            <div class="amount">${formatMoney(amount)}</div>
+          </div>
+        `;
+        
+        expensesSummary.appendChild(el);
+      }
+    }
+
+    // revenue by date
+    revenueSummary.innerHTML = '';
+    if (state.revenue.length === 0) {
+      revenueSummary.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">💰</div>
+          <p>Нет данных о выручке</p>
+        </div>
+      `;
+    } else {
+      const revenueByDate = {};
+      
+      for(const rev of state.revenue){
+        if(!revenueByDate[rev.date]) {
+          revenueByDate[rev.date] = 0;
+        }
+        revenueByDate[rev.date] += Number(rev.amount);
+      }
+      
+      // Сортируем по дате (новые сначала)
+      const sortedDates = Object.keys(revenueByDate).sort((a, b) => b.localeCompare(a));
+      
+      for(const date of sortedDates.slice(0, 5)) { // Показываем последние 5 дней
+        const amount = revenueByDate[date];
+        
+        const el = document.createElement('div');
+        el.className = 'employee-card';
+        el.innerHTML = `
+          <div class="info">
+            <h4>💰 ${date}</h4>
+            <div class="rate">Выручка за день</div>
+          </div>
+          <div class="balance">
+            <div class="amount">${formatMoney(amount)}</div>
+          </div>
+        `;
+        
+        revenueSummary.appendChild(el);
+      }
     }
   }
 
@@ -1278,7 +1770,7 @@
   }
 
   // filters events
-  [filterEmployee, filterCategory, filterFrom, filterTo, filterType].forEach(el=>{
+  [filterEmployee, filterCategory, filterExpenseCategory, filterFrom, filterTo, filterType].forEach(el=>{
     el.addEventListener('input', ()=> renderEntries());
   });
 
@@ -1287,16 +1779,32 @@
     if (!isAuthenticated) return;
     
     // build CSV header
-    const rows = [['id','employee','category','type','amount','date','note','createdAt']];
+    const rows = [
+      ['Тип', 'id', 'employee', 'category', 'type', 'amount', 'date', 'note', 'createdAt']
+    ];
+    
+    // операции по зарплатам
     for(const o of state.ops){
       const e = state.employees.find(x=>x.id===o.employeeId) || {name:'', category:''};
       const category = categories[e.category] || categories.custom;
-      rows.push([o.id, e.name, category.name, o.type, o.amount, o.date, o.note, o.createdAt]);
+      rows.push(['operation', o.id, e.name, category.name, o.type, o.amount, o.date, o.note, o.createdAt]);
     }
+    
+    // расходы
+    for(const expense of state.expenses){
+      const category = expenseCategories[expense.category] || expenseCategories.other;
+      rows.push(['expense', expense.id, '', category.name, 'expense', expense.amount, expense.date, expense.note, expense.createdAt]);
+    }
+    
+    // выручка
+    for(const rev of state.revenue){
+      rows.push(['revenue', rev.id, '', 'выручка', 'revenue', rev.amount, rev.date, rev.note, rev.createdAt]);
+    }
+    
     const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'salary_book.csv'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'salary_expense_revenue_book.csv'; a.click();
     URL.revokeObjectURL(url);
   });
 
@@ -1306,13 +1814,15 @@
     
     const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'salary_book_backup.json'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'salary_expense_revenue_book_backup.json'; a.click();
     URL.revokeObjectURL(url);
   });
+  
   btnImportJSON.addEventListener('click', ()=> {
     if (!isAuthenticated) return;
     importFile.click();
   });
+  
   importFile.addEventListener('change', (e)=>{
     if (!isAuthenticated) return;
     
@@ -1322,7 +1832,11 @@
       const parsed = JSON.parse(reader.result);
       if(!parsed || !Array.isArray(parsed.employees) || !Array.isArray(parsed.ops)) throw new Error('Неверный формат');
       if(!confirm('Импорт заменит текущие данные. Продолжить?')) return;
-      state = parsed; save();
+      state = parsed;
+      // Если в импортируемых данных нет расходов или выручки, инициализируем пустыми массивами
+      if (!state.expenses) state.expenses = [];
+      if (!state.revenue) state.revenue = [];
+      save();
       alert('Импорт выполнен');
     }catch(err){ alert('Ошибка импорта: ' + err.message) } }
     reader.readAsText(f);
@@ -1341,8 +1855,8 @@
   btnClear.addEventListener('click', ()=>{
     if (!isAuthenticated) return;
     
-    if(!confirm('Полностью удалить всех сотрудников и операции?')) return;
-    state = {employees:[], ops:[]};
+    if(!confirm('Полностью удалить всех сотрудников, операции, расходы и выручку?')) return;
+    state = {employees:[], ops:[], expenses:[], revenue:[]};
     selectedEmployee = null;
     save();
   });
