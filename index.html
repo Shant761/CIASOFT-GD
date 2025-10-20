@@ -245,14 +245,14 @@
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
       margin-top: 16px;
     }
 
     .small-card {
       background: white;
-      padding: 20px;
+      padding: 16px;
       border-radius: 12px;
       text-align: center;
       box-shadow: var(--shadow);
@@ -271,12 +271,16 @@
       border-top: 4px solid var(--warning);
     }
 
+    .small-card.income {
+      border-top: 4px solid #8b5cf6;
+    }
+
     .small-card.profit {
       border-top: 4px solid var(--success);
     }
 
     .k {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       margin-top: 8px;
     }
@@ -410,10 +414,91 @@
       border-color: var(--accent);
     }
 
+    /* History panel */
+    .history-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: white;
+      box-shadow: var(--shadow-lg);
+      z-index: 9999;
+      transition: right 0.3s ease;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .history-panel.open {
+      right: 0;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .history-item {
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      border-color: var(--accent);
+      background: #f8fafc;
+    }
+
+    .history-item.active {
+      border-color: var(--accent);
+      background: #f0f4ff;
+    }
+
+    .history-date {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .history-summary {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .grid {
         grid-template-columns: 1fr;
+      }
+      
+      .history-panel {
+        width: 100%;
+        right: -100%;
+      }
+      
+      .summary {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
 
@@ -559,6 +644,23 @@
     </div>
   </div>
 
+  <!-- History Panel -->
+  <div class="overlay" id="overlay"></div>
+  <div class="history-panel" id="historyPanel">
+    <div class="history-header">
+      <div class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        История отчётов
+      </div>
+      <button id="closeHistory" class="ghost" style="padding: 6px 12px;">✖</button>
+    </div>
+    <div id="historyList">
+      <!-- History items will be inserted here -->
+    </div>
+  </div>
+
   <!-- Main Application -->
   <div class="container" id="appContainer" style="display: none;">
     <header class="fade-in">
@@ -577,6 +679,12 @@
             <path d="M7 3V8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           Сохранить
+        </button>
+        <button id="historyBtn" class="ghost">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          История
         </button>
         <button id="exportCsv" class="ghost">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -613,6 +721,7 @@
             <div class="tab active" data-tab="period">Период и выручка</div>
             <div class="tab" data-tab="payroll">Зарплаты</div>
             <div class="tab" data-tab="expenses">Расходы</div>
+            <div class="tab" data-tab="income">Доп. доходы</div>
           </div>
 
           <div class="tab-content active" id="period-tab">
@@ -734,6 +843,48 @@
               </tfoot>
             </table>
           </div>
+
+          <div class="tab-content" id="income-tab">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 1V23M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Дополнительные доходы
+              </div>
+              <div class="actions">
+                <button id="addIncome">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Добавить доход
+                </button>
+                <button id="clearIncome" class="ghost">Очистить</button>
+              </div>
+            </div>
+
+            <table id="incomeTable">
+              <thead>
+                <tr>
+                  <th>Источник дохода</th>
+                  <th>Тип</th>
+                  <th>Сумма</th>
+                  <th>Примечание</th>
+                  <th width="60"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- rows inserted here -->
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="2">Итого по доп. доходам</th>
+                  <th id="incomeTotal">0.00</th>
+                  <th colspan="2"></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
       </main>
 
@@ -753,6 +904,10 @@
             <div class="small-card expenses">
               <div class="muted">Расходы</div>
               <div class="k" id="sumExpenses">0.00 Դ</div>
+            </div>
+            <div class="small-card income">
+              <div class="muted">Доп. доходы</div>
+              <div class="k" id="sumIncome">0.00 Դ</div>
             </div>
             <div class="small-card profit">
               <div class="muted">Прибыль</div>
@@ -841,15 +996,25 @@
     const passwordInput = $('#password')
     const loginBtn = $('#loginBtn')
     const lockBtn = $('#lockBtn')
+    const historyBtn = $('#historyBtn')
+    const historyPanel = $('#historyPanel')
+    const overlay = $('#overlay')
+    const closeHistory = $('#closeHistory')
+    const historyList = $('#historyList')
     
     const payrollTable = $('#payrollTable tbody')
     const expensesTable = $('#expensesTable tbody')
+    const incomeTable = $('#incomeTable tbody')
     const payrollTotalEl = $('#payrollTotal')
     const expensesTotalEl = $('#expensesTotal')
+    const incomeTotalEl = $('#incomeTotal')
     const sumPayroll = $('#sumPayroll')
     const sumExpenses = $('#sumExpenses')
+    const sumIncome = $('#sumIncome')
     const profitEl = $('#profit')
     const revenueEl = $('#revenue')
+    const periodStartEl = $('#periodStart')
+    const periodEndEl = $('#periodEnd')
     const mainChartCanvas = document.getElementById('mainChart')
 
     // state
@@ -859,7 +1024,9 @@
       revenue: 0,
       payroll: [],
       expenses: [],
-      note: ''
+      income: [],
+      note: '',
+      id: null // Unique ID for each report
     }
 
     // Auth system
@@ -930,6 +1097,23 @@
       showToast('Приложение заблокировано', 'success')
     })
 
+    // History panel functionality
+    historyBtn.addEventListener('click', () => {
+      historyPanel.classList.add('open')
+      overlay.classList.add('active')
+      renderHistoryList()
+    })
+
+    closeHistory.addEventListener('click', () => {
+      historyPanel.classList.remove('open')
+      overlay.classList.remove('active')
+    })
+
+    overlay.addEventListener('click', () => {
+      historyPanel.classList.remove('open')
+      overlay.classList.remove('active')
+    })
+
     // Tab functionality
     $$('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -943,16 +1127,134 @@
       })
     })
 
-    function saveToStorage(){
-      localStorage.setItem('restaurant_report_v2', JSON.stringify(state))
-      showToast('Данные сохранены', 'success')
+    // Generate unique ID for each report
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2)
     }
 
-    function loadFromStorage(){
-      const raw = localStorage.getItem('restaurant_report_v2')
-      if(raw){
-        try{ state = JSON.parse(raw) }catch(e){console.warn(e)}
+    // Save report with date-based structure
+    function saveToStorage(){
+      // Generate ID if doesn't exist
+      if (!state.id) {
+        state.id = generateId()
       }
+      
+      // Get existing reports
+      const reports = JSON.parse(localStorage.getItem('cia_soft_reports') || '{}')
+      
+      // Use period start date as key for organization
+      const dateKey = state.periodStart || new Date().toISOString().split('T')[0]
+      
+      // Initialize date entry if doesn't exist
+      if (!reports[dateKey]) {
+        reports[dateKey] = []
+      }
+      
+      // Check if report with this ID already exists
+      const existingIndex = reports[dateKey].findIndex(r => r.id === state.id)
+      
+      if (existingIndex >= 0) {
+        // Update existing report
+        reports[dateKey][existingIndex] = state
+      } else {
+        // Add new report
+        reports[dateKey].push(state)
+      }
+      
+      // Save back to localStorage
+      localStorage.setItem('cia_soft_reports', JSON.stringify(reports))
+      showToast('Данные сохранены', 'success')
+      
+      // Update history list if open
+      if (historyPanel.classList.contains('open')) {
+        renderHistoryList()
+      }
+    }
+
+    // Load reports from storage
+    function loadFromStorage(){
+      const reports = JSON.parse(localStorage.getItem('cia_soft_reports') || '{}')
+      return reports
+    }
+
+    // Load specific report by ID
+    function loadReportById(id) {
+      const reports = loadFromStorage()
+      
+      for (const date in reports) {
+        const report = reports[date].find(r => r.id === id)
+        if (report) {
+          return report
+        }
+      }
+      
+      return null
+    }
+
+    // Render history list
+    function renderHistoryList() {
+      const reports = loadFromStorage()
+      historyList.innerHTML = ''
+      
+      // Get all reports sorted by date (newest first)
+      const allReports = []
+      
+      for (const date in reports) {
+        reports[date].forEach(report => {
+          allReports.push({
+            date: date,
+            report: report
+          })
+        })
+      }
+      
+      // Sort by date (newest first)
+      allReports.sort((a, b) => new Date(b.date) - new Date(a.date))
+      
+      if (allReports.length === 0) {
+        historyList.innerHTML = '<div class="muted" style="text-align: center; padding: 20px;">Нет сохранённых отчётов</div>'
+        return
+      }
+      
+      allReports.forEach(({date, report}) => {
+        const payrollSum = report.payroll.reduce((s, r) => s + (Number(r.amount) || 0), 0)
+        const expensesSum = report.expenses.reduce((s, r) => s + (Number(r.amount) || 0), 0)
+        const incomeSum = report.income.reduce((s, r) => s + (Number(r.amount) || 0), 0)
+        const revenue = Number(report.revenue) || 0
+        const profit = revenue + incomeSum - payrollSum - expensesSum
+        
+        const historyItem = document.createElement('div')
+        historyItem.className = `history-item ${report.id === state.id ? 'active' : ''}`
+        historyItem.innerHTML = `
+          <div class="history-date">${formatDate(date)}</div>
+          <div class="history-summary">
+            <span>Выручка: ${money(revenue)} Դ</span>
+            <span>Прибыль: ${money(profit)} Դ</span>
+          </div>
+          ${report.periodEnd ? `<div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Период: ${formatDate(report.periodStart)} - ${formatDate(report.periodEnd)}</div>` : ''}
+        `
+        
+        historyItem.addEventListener('click', () => {
+          loadReport(report)
+          historyPanel.classList.remove('open')
+          overlay.classList.remove('active')
+          showToast('Отчёт загружен', 'success')
+        })
+        
+        historyList.appendChild(historyItem)
+      })
+    }
+
+    // Format date for display
+    function formatDate(dateString) {
+      const options = { day: '2-digit', month: '2-digit', year: 'numeric' }
+      return new Date(dateString).toLocaleDateString('ru-RU', options)
+    }
+
+    // Load a specific report
+    function loadReport(report) {
+      state = JSON.parse(JSON.stringify(report)) // Deep clone
+      render()
     }
 
     function formatRow(cell){
@@ -960,9 +1262,17 @@
     }
 
     function render(){
+      // Set default dates if not set
+      if (!state.periodStart) {
+        state.periodStart = new Date().toISOString().split('T')[0]
+      }
+      if (!state.periodEnd) {
+        state.periodEnd = new Date().toISOString().split('T')[0]
+      }
+      
       // inputs
-      $('#periodStart').value = state.periodStart || ''
-      $('#periodEnd').value = state.periodEnd || ''
+      periodStartEl.value = state.periodStart || ''
+      periodEndEl.value = state.periodEnd || ''
       revenueEl.value = state.revenue || ''
       $('#reportNote').innerText = state.note || ''
 
@@ -992,6 +1302,19 @@
         expensesTable.appendChild(tr)
       })
 
+      // income
+      incomeTable.innerHTML = ''
+      state.income.forEach((i, idx)=>{
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+          <td contenteditable data-field="source">${escapeHtml(i.source)}</td>
+          <td contenteditable data-field="type">${escapeHtml(i.type)}</td>
+          <td contenteditable data-field="amount">${money(i.amount)}</td>
+          <td contenteditable data-field="note">${escapeHtml(i.note)}</td>
+          <td><button data-action="delIncome" data-idx="${idx}" class="ghost" style="padding: 6px;">✖</button></td>`
+        incomeTable.appendChild(tr)
+      })
+
       updateTotals()
       attachEditableListeners()
       drawChart()
@@ -1000,13 +1323,16 @@
     function updateTotals(){
       const payrollSum = state.payroll.reduce((s,r)=>s + (Number(r.amount)||0), 0)
       const expensesSum = state.expenses.reduce((s,r)=>s + (Number(r.amount)||0), 0)
+      const incomeSum = state.income.reduce((s,r)=>s + (Number(r.amount)||0), 0)
       const revenue = Number(state.revenue)||0
-      const profit = revenue - payrollSum - expensesSum
+      const profit = revenue + incomeSum - payrollSum - expensesSum
 
       payrollTotalEl.innerText = money(payrollSum)
       expensesTotalEl.innerText = money(expensesSum)
+      incomeTotalEl.innerText = money(incomeSum)
       sumPayroll.innerText = money(payrollSum) + ' Դ'
       sumExpenses.innerText = money(expensesSum) + ' Դ'
+      sumIncome.innerText = money(incomeSum) + ' Դ'
       profitEl.innerText = money(profit) + ' Դ'
       
       // Color profit based on value
@@ -1046,6 +1372,16 @@
               state.expenses[idx] = {category,vendor,amount,note}
               updateTotals()
             }
+          } else if(tr && tr.parentElement === incomeTable){
+            const idx = Array.from(incomeTable.children).indexOf(tr)
+            if(idx>=0){
+              const source = tr.querySelector('[data-field="source"]').innerText.trim()
+              const type = tr.querySelector('[data-field="type"]').innerText.trim()
+              const amount = parseFloat(tr.querySelector('[data-field="amount"]').innerText.replace(',','.'))||0
+              const note = tr.querySelector('[data-field="note"]').innerText.trim()
+              state.income[idx] = {source,type,amount,note}
+              updateTotals()
+            }
           }
           // note area
           if(el.id === 'reportNote') state.note = el.innerText
@@ -1059,6 +1395,7 @@
           const idx = Number(btn.dataset.idx)
           if(act==='delPayroll'){ state.payroll.splice(idx,1); render(); }
           if(act==='delExpense'){ state.expenses.splice(idx,1); render(); }
+          if(act==='delIncome'){ state.income.splice(idx,1); render(); }
         }
       })
     }
@@ -1084,13 +1421,38 @@
       $('#expenses-tab').classList.add('active')
     }
 
+    $('#addIncome').onclick = ()=>{
+      state.income.push({source:'Доп. услуги',type:'Другое',amount:0,note:''})
+      render()
+      // Switch to income tab
+      $$('.tab').forEach(t => t.classList.remove('active'))
+      $$('.tab-content').forEach(c => c.classList.remove('active'))
+      $('.tab[data-tab="income"]').classList.add('active')
+      $('#income-tab').classList.add('active')
+    }
+
     $('#clearPayroll').onclick = ()=>{ if(confirm('Удалить все записи по зарплатам?')){ state.payroll = []; render(); } }
     $('#clearExpenses').onclick = ()=>{ if(confirm('Удалить все записи по расходам?')){ state.expenses = []; render(); } }
-    $('#zeroAll').onclick = ()=>{ if(confirm('Сбросить все данные отчёта?')){ state = {periodStart:null,periodEnd:null,revenue:0,payroll:[],expenses:[],note:''}; localStorage.removeItem('restaurant_report_v2'); render(); } }
+    $('#clearIncome').onclick = ()=>{ if(confirm('Удалить все записи по доп. доходам?')){ state.income = []; render(); } }
+    $('#zeroAll').onclick = ()=>{ 
+      if(confirm('Сбросить все данные отчёта?')){ 
+        state = {
+          periodStart: new Date().toISOString().split('T')[0],
+          periodEnd: new Date().toISOString().split('T')[0],
+          revenue: 0,
+          payroll: [],
+          expenses: [],
+          income: [],
+          note: '',
+          id: generateId()
+        }
+        render(); 
+      } 
+    }
     $('#loadSample').onclick = ()=>{
       state = {
-        periodStart: (new Date()).toISOString().slice(0,10),
-        periodEnd: (new Date()).toISOString().slice(0,10),
+        periodStart: new Date().toISOString().split('T')[0],
+        periodEnd: new Date().toISOString().split('T')[0],
         revenue: 125000,
         payroll: [
           {name:'Иванов А.П.',role:'Шеф-повар',amount:35000,note:''},
@@ -1102,7 +1464,12 @@
           {category:'Аренда',vendor:'АРЕНДОДАТЕЛЬ',amount:20000,note:''},
           {category:'Коммунальные услуги',vendor:'Энергосбыт',amount:8500,note:'Электричество'}
         ],
-        note: 'Пример данных для демонстрации работы приложения. Все суммы являются вымышленными.'
+        income: [
+          {source:'Кейтеринг',type:'Внешние услуги',amount:15000,note:'Корпоративное мероприятие'},
+          {source:'Доставка',type:'Доп. услуги',amount:8000,note:''}
+        ],
+        note: 'Пример данных для демонстрации работы приложения. Все суммы являются вымышленными.',
+        id: generateId()
       }
       render()
     }
@@ -1111,8 +1478,8 @@
     $('#printBtn').onclick = ()=>window.print()
 
     // input sync
-    $('#periodStart').onchange = e=>{ state.periodStart = e.target.value }
-    $('#periodEnd').onchange = e=>{ state.periodEnd = e.target.value }
+    periodStartEl.onchange = e=>{ state.periodStart = e.target.value }
+    periodEndEl.onchange = e=>{ state.periodEnd = e.target.value }
     revenueEl.oninput = e=>{ state.revenue = parseFloat(e.target.value)||0; updateTotals(); drawChart() }
 
     // export CSV
@@ -1128,10 +1495,15 @@
       rows.push(['Категория','Получатель','Сумма','Примечание'])
       state.expenses.forEach(e=>rows.push([e.category,e.vendor,money(e.amount),e.note]))
       rows.push([])
+      rows.push(['Дополнительные доходы'])
+      rows.push(['Источник','Тип','Сумма','Примечание'])
+      state.income.forEach(i=>rows.push([i.source,i.type,money(i.amount),i.note]))
+      rows.push([])
       rows.push(['Выручка', money(state.revenue)])
       rows.push(['Итого зарплаты', money(state.payroll.reduce((s,r)=>s+(Number(r.amount)||0),0))])
       rows.push(['Итого расходы', money(state.expenses.reduce((s,r)=>s+(Number(r.amount)||0),0))])
-      rows.push(['Прибыль', money((Number(state.revenue)||0) - state.payroll.reduce((s,r)=>s+(Number(r.amount)||0),0) - state.expenses.reduce((s,r)=>s+(Number(r.amount)||0),0))])
+      rows.push(['Итого доп. доходы', money(state.income.reduce((s,r)=>s+(Number(r.amount)||0),0))])
+      rows.push(['Прибыль', money((Number(state.revenue)||0) + state.income.reduce((s,r)=>s+(Number(r.amount)||0),0) - state.payroll.reduce((s,r)=>s+(Number(r.amount)||0),0) - state.expenses.reduce((s,r)=>s+(Number(r.amount)||0),0))])
 
       const csv = rows.map(r=>r.map(cell=>`"${String(cell||'').replace(/"/g,'""')}"`).join(',')).join('\n')
       const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
@@ -1162,8 +1534,10 @@
       const revenue = Number(state.revenue)||0
       const payrollSum = state.payroll.reduce((s,r)=>s + (Number(r.amount)||0), 0)
       const expensesSum = state.expenses.reduce((s,r)=>s + (Number(r.amount)||0), 0)
+      const incomeSum = state.income.reduce((s,r)=>s + (Number(r.amount)||0), 0)
+      const totalRevenue = revenue + incomeSum
       const costs = payrollSum + expensesSum
-      const profit = revenue - costs
+      const profit = totalRevenue - costs
 
       // try to load Chart.js if not available
       if(typeof Chart === 'undefined'){
@@ -1176,18 +1550,20 @@
 
       const ctx = mainChartCanvas.getContext('2d')
       const data = {
-        labels: ['Выручка','Зарплаты','Расходы','Прибыль'],
+        labels: ['Выручка','Доп. доходы','Зарплаты','Расходы','Прибыль'],
         datasets:[{
           label:'Суммы (Դ)',
-          data:[revenue, payrollSum, expensesSum, profit],
+          data:[revenue, incomeSum, payrollSum, expensesSum, profit],
           backgroundColor: [
             'rgba(79, 70, 229, 0.8)',
+            'rgba(139, 92, 246, 0.8)',
             'rgba(99, 102, 241, 0.8)',
             'rgba(245, 158, 11, 0.8)',
             profit >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'
           ],
           borderColor: [
             'rgba(79, 70, 229, 1)',
+            'rgba(139, 92, 246, 1)',
             'rgba(99, 102, 241, 1)',
             'rgba(245, 158, 11, 1)',
             profit >= 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)'
@@ -1231,7 +1607,20 @@
     function escapeHtml(text){ return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 
     // initial load
-    loadFromStorage()
+    // Check if there are any saved reports
+    const reports = loadFromStorage()
+    const today = new Date().toISOString().split('T')[0]
+    
+    if (Object.keys(reports).length > 0 && reports[today] && reports[today].length > 0) {
+      // Load the most recent report for today
+      state = reports[today][reports[today].length - 1]
+    } else {
+      // Create a new report for today
+      state.id = generateId()
+      state.periodStart = today
+      state.periodEnd = today
+    }
+    
     render()
 
     // Auto-save every 20 seconds
