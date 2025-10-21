@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CIA SOFT - Финансовый отчёт ресторана</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -139,7 +143,9 @@
     input[type="number"],
     input[type="date"],
     input[type="password"],
-    select {
+    input[type="email"],
+    select,
+    textarea {
       width: 100%;
       padding: 12px 16px;
       border-radius: 10px;
@@ -149,7 +155,7 @@
       background: white;
     }
 
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
@@ -412,6 +418,50 @@
       background: #f8fafc;
       color: var(--accent);
       border-color: var(--accent);
+    }
+
+    /* Firebase Auth styles */
+    .firebase-auth {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f0f9ff;
+      border-radius: 10px;
+      border: 1px dashed #7dd3fc;
+    }
+
+    .auth-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .auth-status.connected {
+      color: var(--success);
+    }
+
+    .auth-status.disconnected {
+      color: var(--muted);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
     }
 
     /* History panel */
@@ -933,6 +983,70 @@
 
           <div class="divider"></div>
 
+          <div class="firebase-auth">
+            <div class="section-title" style="font-size: 16px; margin-bottom: 12px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Синхронизация с Firebase
+            </div>
+            
+            <div id="firebaseStatus" class="auth-status disconnected">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Не подключено
+            </div>
+            
+            <div id="userInfo" style="display: none;">
+              <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                  <div id="userEmail" style="font-weight: 500;"></div>
+                  <div class="muted" id="userId" style="font-size: 12px;"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="backup-buttons">
+              <button id="firebaseLogin" class="ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Войти в Firebase
+              </button>
+              <button id="firebaseLogout" class="ghost" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Выйти
+              </button>
+            </div>
+            
+            <div class="backup-buttons" style="margin-top: 12px;">
+              <button id="syncToFirebase" class="ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C15.1827 3 17.9554 4.74261 19.4676 7.33333M19.4676 7.33333V3M19.4676 7.33333H15.1343" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Синхронизировать
+              </button>
+              <button id="loadFromFirebase" class="ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C15.1827 3 17.9554 4.74261 19.4676 7.33333M19.4676 7.33333V3M19.4676 7.33333H15.1343" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Загрузить из облака
+              </button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
           <div>
             <label class="section-title">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -980,11 +1094,28 @@
     </div>
 
     <footer class="muted fade-in">
-      Данные сохраняются автоматически в вашем браузере. Чтобы сбросить все данные — используйте кнопку «Сбросить всё».
+      Данные сохраняются автоматически в вашем браузере. Для синхронизации между устройствами используйте Firebase.
     </footer>
   </div>
 
   <script>
+    // Firebase configuration - ВАША КОНФИГУРАЦИЯ
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzKU_mZSVJc6nJA1PTZcKuZ9e8SwuZKqU",
+      authDomain: "georges-1c626.firebaseapp.com",
+      databaseURL: "https://georges-1c626-default-rtdb.firebaseio.com",
+      projectId: "georges-1c626",
+      storageBucket: "georges-1c626.firebasestorage.app",
+      messagingSenderId: "490623110927",
+      appId: "1:490623110927:web:e82dfab4020dbd3e97387a",
+      measurementId: "G-MG6DYZLWZP"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
     // utils
     const $ = sel => document.querySelector(sel)
     const $$ = sel => document.querySelectorAll(sel)
@@ -1001,6 +1132,17 @@
     const overlay = $('#overlay')
     const closeHistory = $('#closeHistory')
     const historyList = $('#historyList')
+    
+    // Firebase elements
+    const firebaseStatus = $('#firebaseStatus')
+    const userInfo = $('#userInfo')
+    const userAvatar = $('#userAvatar')
+    const userEmail = $('#userEmail')
+    const userId = $('#userId')
+    const firebaseLogin = $('#firebaseLogin')
+    const firebaseLogout = $('#firebaseLogout')
+    const syncToFirebase = $('#syncToFirebase')
+    const loadFromFirebase = $('#loadFromFirebase')
     
     const payrollTable = $('#payrollTable tbody')
     const expensesTable = $('#expensesTable tbody')
@@ -1026,16 +1168,19 @@
       expenses: [],
       income: [],
       note: '',
-      id: null // Unique ID for each report
+      id: null
     }
 
+    // Firebase state
+    let firebaseUser = null
+    let isFirebaseConnected = false
+
     // Auth system
-    const APP_PASSWORD = 'admin123' // Default password
+    const APP_PASSWORD = 'admin123'
 
     function checkAuth() {
       const savedPassword = localStorage.getItem('cia_soft_password')
       if (!savedPassword) {
-        // First time - set default password
         localStorage.setItem('cia_soft_password', btoa(APP_PASSWORD))
         return false
       }
@@ -1096,6 +1241,154 @@
       logout()
       showToast('Приложение заблокировано', 'success')
     })
+
+    // Firebase Authentication
+    function initFirebaseAuth() {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          firebaseUser = user
+          isFirebaseConnected = true
+          updateFirebaseUI(true)
+          showToast('Успешный вход в Firebase', 'success')
+        } else {
+          firebaseUser = null
+          isFirebaseConnected = false
+          updateFirebaseUI(false)
+        }
+      })
+    }
+
+    function updateFirebaseUI(isSignedIn) {
+      if (isSignedIn) {
+        firebaseStatus.textContent = 'Подключено'
+        firebaseStatus.className = 'auth-status connected'
+        userInfo.style.display = 'block'
+        firebaseLogin.style.display = 'none'
+        firebaseLogout.style.display = 'block'
+        
+        // Update user info
+        userEmail.textContent = firebaseUser.email || 'Анонимный пользователь'
+        userId.textContent = `ID: ${firebaseUser.uid.substring(0, 8)}...`
+        userAvatar.textContent = (firebaseUser.email || 'U').charAt(0).toUpperCase()
+      } else {
+        firebaseStatus.textContent = 'Не подключено'
+        firebaseStatus.className = 'auth-status disconnected'
+        userInfo.style.display = 'none'
+        firebaseLogin.style.display = 'block'
+        firebaseLogout.style.display = 'none'
+      }
+    }
+
+    function signInWithEmail() {
+      const email = prompt('Введите email для входа в Firebase:')
+      if (!email) return
+      
+      const password = prompt('Введите пароль:')
+      if (!password) return
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          showToast('Успешный вход в Firebase', 'success')
+        })
+        .catch((error) => {
+          console.error('Ошибка входа:', error)
+          showToast('Ошибка входа: ' + error.message, 'error')
+        })
+    }
+
+    function signOut() {
+      auth.signOut()
+        .then(() => {
+          showToast('Выход из Firebase выполнен', 'success')
+        })
+        .catch((error) => {
+          console.error('Ошибка выхода:', error)
+          showToast('Ошибка выхода: ' + error.message, 'error')
+        })
+    }
+
+    // Firebase Firestore functions
+    function saveToFirebase() {
+      if (!isFirebaseConnected || !firebaseUser) {
+        showToast('Сначала войдите в Firebase', 'error')
+        return
+      }
+      
+      const userRef = db.collection('users').doc(firebaseUser.uid)
+      const reportsRef = userRef.collection('reports')
+      
+      // Generate ID if doesn't exist
+      if (!state.id) {
+        state.id = generateId()
+      }
+      
+      // Add timestamp
+      state.updatedAt = new Date().toISOString()
+      state.createdAt = state.createdAt || state.updatedAt
+      
+      reportsRef.doc(state.id).set(state)
+        .then(() => {
+          showToast('Данные сохранены в Firebase', 'success')
+        })
+        .catch((error) => {
+          console.error('Ошибка сохранения в Firebase:', error)
+          showToast('Ошибка сохранения: ' + error.message, 'error')
+        })
+    }
+
+    function loadFromFirebase() {
+      if (!isFirebaseConnected || !firebaseUser) {
+        showToast('Сначала войдите в Firebase', 'error')
+        return
+      }
+      
+      const reportsRef = db.collection('users').doc(firebaseUser.uid).collection('reports')
+      
+      reportsRef.orderBy('updatedAt', 'desc').get()
+        .then((querySnapshot) => {
+          const reports = {}
+          
+          querySnapshot.forEach((doc) => {
+            const report = doc.data()
+            const dateKey = report.periodStart || new Date().toISOString().split('T')[0]
+            
+            if (!reports[dateKey]) {
+              reports[dateKey] = []
+            }
+            
+            reports[dateKey].push(report)
+          })
+          
+          // Save to localStorage for offline use
+          localStorage.setItem('cia_soft_reports', JSON.stringify(reports))
+          
+          // Load the most recent report
+          const today = new Date().toISOString().split('T')[0]
+          if (Object.keys(reports).length > 0 && reports[today] && reports[today].length > 0) {
+            state = reports[today][reports[today].length - 1]
+          } else if (Object.keys(reports).length > 0) {
+            // Load the first available report
+            const firstDate = Object.keys(reports)[0]
+            state = reports[firstDate][0]
+          }
+          
+          render()
+          showToast('Данные загружены из Firebase', 'success')
+        })
+        .catch((error) => {
+          console.error('Ошибка загрузки из Firebase:', error)
+          showToast('Ошибка загрузки: ' + error.message, 'error')
+        })
+    }
+
+    // Firebase event listeners
+    firebaseLogin.addEventListener('click', signInWithEmail)
+    firebaseLogout.addEventListener('click', signOut)
+    syncToFirebase.addEventListener('click', saveToFirebase)
+    loadFromFirebase.addEventListener('click', loadFromFirebase)
+
+    // Initialize Firebase
+    initFirebaseAuth()
 
     // History panel functionality
     historyBtn.addEventListener('click', () => {
@@ -1163,7 +1456,7 @@
       
       // Save back to localStorage
       localStorage.setItem('cia_soft_reports', JSON.stringify(reports))
-      showToast('Данные сохранены', 'success')
+      showToast('Данные сохранены локально', 'success')
       
       // Update history list if open
       if (historyPanel.classList.contains('open')) {
@@ -1474,7 +1767,12 @@
       render()
     }
 
-    $('#saveBtn').onclick = saveToStorage
+    $('#saveBtn').onclick = ()=>{
+      saveToStorage()
+      if (isFirebaseConnected) {
+        saveToFirebase()
+      }
+    }
     $('#printBtn').onclick = ()=>window.print()
 
     // input sync
@@ -1624,7 +1922,12 @@
     render()
 
     // Auto-save every 20 seconds
-    setInterval(() => { saveToStorage() }, 20000)
+    setInterval(() => { 
+      saveToStorage()
+      if (isFirebaseConnected) {
+        saveToFirebase()
+      }
+    }, 20000)
   </script>
 </body>
 </html>
