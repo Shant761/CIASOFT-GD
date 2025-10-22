@@ -3,1002 +3,204 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CIA SOFT - Финансовый отчёт ресторана</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Firebase SDK -->
+  <title>CIA SOFT - Финансовый отчёт</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
   <style>
     :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --accent: #4f46e5;
-      --accent-light: #6366f1;
-      --muted: #64748b;
-      --muted-light: #94a3b8;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --border: #e2e8f0;
-      --border-light: #f1f5f9;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', ui-sans-serif, system-ui, Arial, sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #f0f4f8 0%, #f8fafc 100%);
-      color: #0f172a;
-      min-height: 100vh;
-      line-height: 1.5;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: center;
-      margin-bottom: 24px;
-      padding: 16px 24px;
-      background: var(--card);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      position: relative;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--accent);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0;
-      color: #0f172a;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .card:hover {
-      box-shadow: var(--shadow-lg);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 24px;
-    }
-
-    .section-title {
-      font-weight: 600;
-      font-size: 18px;
-      margin-bottom: 16px;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .section-title svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-left: auto;
-    }
-
-    label {
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 500;
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    input[type="password"],
-    input[type="email"],
-    select,
-    textarea {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-      transition: all 0.2s;
-      background: white;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-    }
-
-    th, td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-light);
-      text-align: left;
-    }
-
-    th {
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    tr:hover {
-      background-color: #f8fafc;
-    }
-
-    td[contenteditable] {
-      background: linear-gradient(90deg, #ffffff, #fbfdff);
-      border-radius: 6px;
-      transition: background 0.2s;
-    }
-
-    td[contenteditable]:focus {
-      background: white;
-      outline: 2px solid var(--accent-light);
-      outline-offset: -2px;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    button {
-      background: var(--accent);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 10px;
-      border: 0;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-
-    button:hover {
-      background: var(--accent-light);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button.ghost {
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--border);
-    }
-
-    button.ghost:hover {
-      background: #f8fafc;
-      border-color: var(--accent);
-    }
-
-    button.warn {
-      background: var(--danger);
-    }
-
-    button.warn:hover {
-      background: #dc2626;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .small-card {
-      background: white;
-      padding: 16px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: var(--shadow);
-      transition: transform 0.2s;
-    }
-
-    .small-card:hover {
-      transform: translateY(-2px);
-    }
-
-    .small-card.payroll {
-      border-top: 4px solid var(--accent);
-    }
-
-    .small-card.expenses {
-      border-top: 4px solid var(--warning);
-    }
-
-    .small-card.income {
-      border-top: 4px solid #8b5cf6;
-    }
-
-    .small-card.profit {
-      border-top: 4px solid var(--success);
-    }
-
-    .k {
-      font-size: 20px;
-      font-weight: 700;
-      margin-top: 8px;
-    }
-
-    .chart-wrap {
-      margin-top: 16px;
-      background: white;
-      padding: 16px;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-    }
-
-    footer {
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      margin-top: 32px;
-      padding: 16px;
-    }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 20px 0;
-    }
-
-    .period-inputs {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .period-inputs input {
-      flex: 1;
-    }
-
-    .revenue-input {
-      position: relative;
-    }
-
-    .revenue-input:before {
-      content: "Դ";
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-    }
-
-    .revenue-input input {
-      padding-left: 30px;
-    }
-
-    /* Auth modal styles */
-    .auth-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(15, 23, 42, 0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-      backdrop-filter: blur(4px);
-    }
-
-    .auth-box {
-      background: white;
-      border-radius: 16px;
-      padding: 32px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-    }
-
-    .auth-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .auth-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .auth-subtitle {
-      color: var(--muted);
-      margin-bottom: 24px;
-    }
-
-    .auth-input {
-      margin-bottom: 16px;
-      text-align: left;
-    }
-
-    .auth-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .auth-actions button {
-      flex: 1;
-    }
-
-    .lock-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 8px 12px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-    }
-
-    .lock-btn:hover {
-      background: #f8fafc;
-      color: var(--accent);
-      border-color: var(--accent);
-    }
-
-    /* Firebase Auth styles */
-    .firebase-auth {
-      margin-top: 20px;
-      padding: 16px;
-      background: #f0f9ff;
-      border-radius: 10px;
-      border: 1px dashed #7dd3fc;
-    }
-
-    .auth-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-      font-weight: 500;
-    }
-
-    .auth-status.connected {
-      color: var(--success);
-    }
-
-    .auth-status.disconnected {
-      color: var(--muted);
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-    }
-
-    /* History panel */
-    .history-panel {
-      position: fixed;
-      top: 0;
-      right: -400px;
-      width: 400px;
-      height: 100%;
-      background: white;
-      box-shadow: var(--shadow-lg);
-      z-index: 9999;
-      transition: right 0.3s ease;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    .history-panel.open {
-      right: 0;
-    }
-
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .history-item {
-      padding: 16px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .history-item:hover {
-      border-color: var(--accent);
-      background: #f8fafc;
-    }
-
-    .history-item.active {
-      border-color: var(--accent);
-      background: #f0f4ff;
-    }
-
-    .history-date {
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .history-summary {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 9998;
-      display: none;
-    }
-
-    .overlay.active {
-      display: block;
-    }
-
-    /* Responsive */
-    @media (max-width: 1024px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .history-panel {
-        width: 100%;
-        right: -100%;
-      }
-      
-      .summary {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 16px;
-      }
-      
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .controls {
-        margin-left: 0;
-        width: 100%;
-        justify-content: center;
-      }
-      
-      .summary {
-        grid-template-columns: 1fr;
-      }
-      
-      .period-inputs {
-        flex-direction: column;
-      }
-      
-      .lock-btn {
-        position: relative;
-        top: 0;
-        right: 0;
-        margin-top: 12px;
-        align-self: flex-end;
-      }
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .fade-in {
-      animation: fadeIn 0.3s ease-out;
-    }
-
-    /* Toast notification */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0f172a;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 10px;
-      box-shadow: var(--shadow-lg);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      animation: fadeIn 0.3s;
-    }
-
-    .toast.success {
-      background: var(--success);
-    }
-
-    .toast.error {
-      background: var(--danger);
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 20px;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 10px;
-      width: fit-content;
-    }
-
-    .tab {
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-
-    .tab.active {
-      background: white;
-      box-shadow: var(--shadow);
-    }
-
-    /* Loading state */
-    .loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    /* Print styles */
-    @media print {
-      button, .controls, footer, .lock-btn {
-        display: none;
-      }
-      
-      .card {
-        box-shadow: none;
-        border: 1px solid #ddd;
-      }
-      
-      .auth-modal {
-        display: none !important;
-      }
+      --bg: #f8fafc; --card: #ffffff; --accent: #4f46e5; --accent-light: #6366f1;
+      --muted: #64748b; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+      --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #0f172a; min-height: 100vh; line-height: 1.5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+    h1 { font-size: 20px; font-weight: 700; }
+    .subtitle { font-size: 13px; color: var(--muted); }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+    .section-title { font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
+    .controls { display: flex; gap: 10px; }
+    label { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 5px; display: block; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { font-size: 13px; color: var(--muted); font-weight: 500; }
+    td[contenteditable] { background: #fbfdff; border-radius: 4px; }
+    button { background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+    button:hover { background: var(--accent-light); }
+    button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+    button.warn { background: var(--danger); }
+    .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    .small-card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); }
+    .small-card.payroll { border-top: 3px solid var(--accent); }
+    .small-card.expenses { border-top: 3px solid var(--warning); }
+    .small-card.income { border-top: 3px solid #8b5cf6; }
+    .small-card.profit { border-top: 3px solid var(--success); }
+    .k { font-size: 18px; font-weight: 700; margin-top: 5px; }
+    .history-panel { position: fixed; top:0; right:-350px; width:350px; height:100%; background: white; box-shadow: var(--shadow); z-index: 999; transition: right 0.3s; padding: 20px; overflow-y: auto; }
+    .history-panel.open { right: 0; }
+    .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
+    .overlay.active { display: block; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 15px; background: #f1f5f9; padding: 4px; border-radius: 8px; width: fit-content; }
+    .tab { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .tab.active { background: white; box-shadow: var(--shadow); }
+    .firebase-section { background: #f0f9ff; padding: 15px; border-radius: 8px; border: 1px dashed #7dd3fc; margin-top: 15px; }
+    .auth-status { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 500; }
+    .auth-status.connected { color: var(--success); }
+    .auth-status.disconnected { color: var(--muted); }
+    .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+    .setup-guide { background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 12px; margin-top: 10px; font-size: 12px; }
+    .setup-guide h4 { margin: 0 0 8px 0; color: #ea580c; }
+    .setup-guide ol { margin: 0; padding-left: 16px; }
+    .setup-guide li { margin-bottom: 4px; }
+    @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { 
+      .container { padding: 15px; } 
+      header { flex-direction: column; gap: 15px; align-items: flex-start; }
+      .controls { width: 100%; justify-content: center; }
+      .summary { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <!-- Authentication Modal -->
-  <div class="auth-modal" id="authModal">
-    <div class="auth-box fade-in">
-      <div class="auth-logo">
-        <div class="logo-icon">CIA</div>
-        <div>
-          <div class="auth-title">CIA SOFT</div>
-          <div class="auth-subtitle">Финансовый отчёт ресторана</div>
-        </div>
-      </div>
-      
-      <div id="loginView">
-        <div class="auth-input">
-          <label for="password">Введите пароль для доступа</label>
-          <input type="password" id="password" placeholder="Пароль" value="admin123">
-        </div>
-        <div class="auth-actions">
-          <button id="loginBtn" class="ghost">Войти</button>
-          <button id="resetPassword" class="ghost" style="margin-top: 10px;">Сбросить пароль</button>
-        </div>
-        <div style="margin-top: 16px; font-size: 14px; color: var(--muted);">
-          Пароль по умолчанию: <strong>admin123</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- History Panel -->
   <div class="overlay" id="overlay"></div>
   <div class="history-panel" id="historyPanel">
-    <div class="history-header">
-      <div class="section-title">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        История отчётов
-      </div>
-      <button id="closeHistory" class="ghost" style="padding: 6px 12px;">✖</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <div class="section-title">История отчётов</div>
+      <button id="closeHistory" class="ghost">✖</button>
     </div>
-    <div id="historyList">
-      <!-- History items will be inserted here -->
-    </div>
+    <div id="historyList"></div>
   </div>
 
-  <!-- Main Application -->
-  <div class="container" id="appContainer" style="display: none;">
-    <header class="fade-in">
+  <div class="container" id="appContainer">
+    <header>
       <div class="logo">
         <div class="logo-icon">CIA</div>
         <div>
-          <h1>CIA SOFT - Финансовый отчёт</h1>
-          <div class="subtitle">Управление зарплатами, расходами и прибылью в реальном времени</div>
+          <h1>Финансовый отчёт</h1>
+          <div class="subtitle">Управление финансами ресторана</div>
         </div>
       </div>
       <div class="controls">
-        <button id="saveBtn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M17 21V13H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7 3V8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Сохранить
-        </button>
-        <button id="historyBtn" class="ghost">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          История
-        </button>
-        <button id="exportCsv" class="ghost">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Экспорт CSV
-        </button>
-        <button id="printBtn" class="ghost">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 9V2H18V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V11C2 10.4696 2.21071 9.96086 2.58579 9.58579C2.96086 9.21071 3.46957 9 4 9H20C20.5304 9 21.0391 9.21071 21.4142 9.58579C21.7893 9.96086 22 10.4696 22 11V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 17.8 20 18H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M18 14H6V22H18V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Печать
-        </button>
+        <button id="saveBtn">💾 Сохранить</button>
+        <button id="historyBtn" class="ghost">📊 История</button>
+        <button id="exportCsv" class="ghost">📄 Экспорт</button>
       </div>
-      <button class="lock-btn" id="lockBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Заблокировать
-      </button>
     </header>
 
     <div class="grid">
       <main>
-        <div class="card fade-in">
+        <div class="card">
           <div class="tabs">
-            <div class="tab active" data-tab="period">Период и выручка</div>
+            <div class="tab active" data-tab="period">Период</div>
             <div class="tab" data-tab="payroll">Зарплаты</div>
             <div class="tab" data-tab="expenses">Расходы</div>
-            <div class="tab" data-tab="income">Доп. доходы</div>
+            <div class="tab" data-tab="income">Доходы</div>
           </div>
 
           <div class="tab-content active" id="period-tab">
-            <div style="display: flex; gap: 24px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 300px;">
-                <label class="section-title">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 7V3M16 7V3M7 11H17M5 21H19C19.5304 21 20.0391 20.7893 20.4142 20.4142C20.7893 20.0391 21 19.5304 21 19V7C21 6.46957 20.7893 5.96086 20.4142 5.58579C20.0391 5.21071 19.5304 5 19 5H5C4.46957 5 3.96086 5.21071 3.58579 5.58579C3.21071 5.96086 3 6.46957 3 7V19C3 19.5304 3.21071 20.0391 3.58579 20.4142C3.96086 20.7893 4.46957 21 5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Период отчёта
-                </label>
-                <div class="period-inputs">
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 250px;">
+                <div class="section-title">Период отчёта</div>
+                <div style="display: flex; gap: 10px; align-items: center;">
                   <div style="flex: 1;">
-                    <label>Начало периода</label>
+                    <label>Начало</label>
                     <input type="date" id="periodStart">
                   </div>
-                  <div style="display: flex; align-items: center; margin-top: 22px;">—</div>
+                  <div>—</div>
                   <div style="flex: 1;">
-                    <label>Конец периода</label>
+                    <label>Конец</label>
                     <input type="date" id="periodEnd">
                   </div>
                 </div>
               </div>
-              <div style="width: 280px;">
-                <label class="section-title">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 1V23M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Выручка за период
-                </label>
-                <div class="revenue-input">
-                  <input type="number" id="revenue" step="0.01" placeholder="0.00">
-                </div>
+              <div style="width: 200px;">
+                <div class="section-title">Выручка за период</div>
+                <input type="number" id="revenue" step="0.01" placeholder="0.00">
               </div>
             </div>
           </div>
 
           <div class="tab-content" id="payroll-tab">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <div class="section-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Зарплаты сотрудников
-              </div>
-              <div class="actions">
-                <button id="addPayroll">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Добавить сотрудника
-                </button>
-                <button id="clearPayroll" class="ghost">Очистить</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <div class="section-title">Зарплаты сотрудников</div>
+              <div>
+                <button id="addPayroll">+ Добавить</button>
               </div>
             </div>
-
             <table id="payrollTable">
-              <thead>
-                <tr>
-                  <th>Имя</th>
-                  <th>Должность</th>
-                  <th>Сумма</th>
-                  <th>Примечание</th>
-                  <th width="60"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- rows inserted here -->
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="2">Итого по зарплатам</th>
-                  <th id="payrollTotal">0.00</th>
-                  <th colspan="2"></th>
-                </tr>
-              </tfoot>
+              <thead><tr><th>Имя</th><th>Должность</th><th>Сумма</th><th width="40"></th></tr></thead>
+              <tbody></tbody>
+              <tfoot><tr><th colspan="2">Итого</th><th id="payrollTotal">0.00</th><th></th></tr></tfoot>
             </table>
           </div>
 
           <div class="tab-content" id="expenses-tab">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <div class="section-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C13.3132 2 14.6136 2.25866 15.8268 2.7612C17.0401 3.26375 18.1425 4.00035 19.0711 4.92893C19.9997 5.85752 20.7362 6.95991 21.2388 8.17317C21.7413 9.38642 22 10.6868 22 12C22 13.3132 21.7413 14.6136 21.2388 15.8268C20.7362 17.0401 19.9997 18.1425 19.0711 19.0711C18.1425 19.9997 17.0401 20.7362 15.8268 21.2388C14.6136 21.7413 13.3132 22 12 22C9.34784 22 6.8043 20.9464 4.92893 19.0711C3.05357 17.1957 2 14.6522 2 12C2 9.34784 3.05357 6.8043 4.92893 4.92893C6.8043 3.05357 9.34784 2 12 2V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Расходы ресторана
-              </div>
-              <div class="actions">
-                <button id="addExpense">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Добавить расход
-                </button>
-                <button id="clearExpenses" class="ghost">Очистить</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <div class="section-title">Расходы ресторана</div>
+              <div>
+                <button id="addExpense">+ Добавить</button>
               </div>
             </div>
-
             <table id="expensesTable">
-              <thead>
-                <tr>
-                  <th>Категория</th>
-                  <th>Получатель / магазин</th>
-                  <th>Сумма</th>
-                  <th>Примечание</th>
-                  <th width="60"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- rows inserted here -->
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="2">Итого по расходам</th>
-                  <th id="expensesTotal">0.00</th>
-                  <th colspan="2"></th>
-                </tr>
-              </tfoot>
+              <thead><tr><th>Категория</th><th>Получатель</th><th>Сумма</th><th width="40"></th></tr></thead>
+              <tbody></tbody>
+              <tfoot><tr><th colspan="2">Итого</th><th id="expensesTotal">0.00</th><th></th></tr></tfoot>
             </table>
           </div>
 
           <div class="tab-content" id="income-tab">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <div class="section-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 1V23M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Дополнительные доходы
-              </div>
-              <div class="actions">
-                <button id="addIncome">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Добавить доход
-                </button>
-                <button id="clearIncome" class="ghost">Очистить</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <div class="section-title">Дополнительные доходы</div>
+              <div>
+                <button id="addIncome">+ Добавить</button>
               </div>
             </div>
-
             <table id="incomeTable">
-              <thead>
-                <tr>
-                  <th>Источник дохода</th>
-                  <th>Тип</th>
-                  <th>Сумма</th>
-                  <th>Примечание</th>
-                  <th width="60"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- rows inserted here -->
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="2">Итого по доп. доходам</th>
-                  <th id="incomeTotal">0.00</th>
-                  <th colspan="2"></th>
-                </tr>
-              </tfoot>
+              <thead><tr><th>Источник</th><th>Тип</th><th>Сумма</th><th width="40"></th></tr></thead>
+              <tbody></tbody>
+              <tfoot><tr><th colspan="2">Итого</th><th id="incomeTotal">0.00</th><th></th></tr></tfoot>
             </table>
           </div>
         </div>
       </main>
 
       <aside>
-        <div class="card fade-in">
-          <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 17H15M12 12V12.01M12 3V3.01M3 12H3.01M3 21H3.01M21 12H21.01M5.6 5.6L5.61 5.61M18.4 5.6L18.41 5.61M18.4 18.4L18.41 18.41M5.6 18.4L5.61 18.41M21 21V3H3V21H21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Финансовая сводка
-          </div>
+        <div class="card">
+          <div class="section-title">Финансовая сводка</div>
           <div class="summary">
             <div class="small-card payroll">
-              <div class="muted">Зарплаты</div>
-              <div class="k" id="sumPayroll">0.00 Դ</div>
+              <div style="font-size: 13px; color: var(--muted);">Зарплаты</div>
+              <div class="k" id="sumPayroll">0.00</div>
             </div>
             <div class="small-card expenses">
-              <div class="muted">Расходы</div>
-              <div class="k" id="sumExpenses">0.00 Դ</div>
+              <div style="font-size: 13px; color: var(--muted);">Расходы</div>
+              <div class="k" id="sumExpenses">0.00</div>
             </div>
             <div class="small-card income">
-              <div class="muted">Доп. доходы</div>
-              <div class="k" id="sumIncome">0.00 Դ</div>
+              <div style="font-size: 13px; color: var(--muted);">Доходы</div>
+              <div class="k" id="sumIncome">0.00</div>
             </div>
             <div class="small-card profit">
-              <div class="muted">Прибыль</div>
-              <div class="k" id="profit">0.00 Դ</div>
+              <div style="font-size: 13px; color: var(--muted);">Прибыль</div>
+              <div class="k" id="profit">0.00</div>
             </div>
           </div>
 
-          <div class="divider"></div>
-
-          <div>
-            <label class="section-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3V21H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 16L10 13L13 16L17 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 10H7.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              График распределения
-            </label>
-            <div class="chart-wrap">
-              <canvas id="mainChart" height="200" style="width:100%"></canvas>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="firebase-auth">
-            <div class="section-title" style="font-size: 16px; margin-bottom: 12px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Синхронизация с Firebase
-            </div>
+          <div class="firebase-section">
+            <div class="section-title" style="font-size: 16px; margin-bottom: 12px;">Firebase Синхронизация</div>
             
             <div id="firebaseStatus" class="auth-status disconnected">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Не подключено
+              🔴 Проверка подключения...
             </div>
             
             <div id="userInfo" style="display: none;">
@@ -1006,341 +208,205 @@
                 <div class="user-avatar" id="userAvatar">U</div>
                 <div>
                   <div id="userEmail" style="font-weight: 500;"></div>
-                  <div class="muted" id="userId" style="font-size: 12px;"></div>
+                  <div style="font-size: 12px; color: var(--muted);" id="userId"></div>
                 </div>
               </div>
             </div>
             
-            <div class="backup-buttons">
-              <button id="firebaseLogin" class="ghost">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Войти в Firebase
-              </button>
-              <button id="firebaseLogout" class="ghost" style="display: none;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Выйти
-              </button>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <button id="firebaseLogin" class="ghost">Войти в Firebase</button>
+              <button id="firebaseRegister" class="ghost">Регистрация</button>
+              <button id="firebaseLogout" class="ghost" style="display: none;">Выйти</button>
             </div>
             
-            <div class="backup-buttons" style="margin-top: 12px;">
-              <button id="syncToFirebase" class="ghost">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C15.1827 3 17.9554 4.74261 19.4676 7.33333M19.4676 7.33333V3M19.4676 7.33333H15.1343" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Синхронизировать
-              </button>
-              <button id="loadFromFirebase" class="ghost">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C15.1827 3 17.9554 4.74261 19.4676 7.33333M19.4676 7.33333V3M19.4676 7.33333H15.1343" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Загрузить из облака
-              </button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button id="syncToFirebase" class="ghost">💾 Сохранить в облако</button>
+              <button id="loadFromFirebase" class="ghost">📥 Загрузить из облака</button>
             </div>
-          </div>
 
-          <div class="divider"></div>
-
-          <div>
-            <label class="section-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11 5H6C5.46957 5 4.96086 5.21071 4.58579 5.58579C4.21071 5.96086 4 6.46957 4 7V18C4 18.5304 4.21071 19.0391 4.58579 19.4142C4.96086 19.7893 5.46957 20 6 20H17C17.5304 20 18.0391 19.7893 18.4142 19.4142C18.7893 19.0391 19 18.5304 19 18V13M17.5858 3.58579C18.3668 2.80474 19.6332 2.80474 20.4142 3.58579C21.1953 4.36683 21.1953 5.63316 20.4142 6.41421L11.8284 15H9L9 12.1716L17.5858 3.58579Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Примечание отчёта
-            </label>
-            <div contenteditable id="reportNote" style="min-height: 100px; padding: 16px; border-radius: 10px; border: 1px dashed var(--border); background: #fbfdff; margin-top: 8px;"></div>
+            <div class="setup-guide" id="setupGuide">
+              <h4>Настройка Firebase:</h4>
+              <ol>
+                <li>В Firebase Console включите Authentication → Email/Password</li>
+                <li>Создайте Firestore Database в тестовом режиме</li>
+                <li>Нажмите "Регистрация" чтобы создать аккаунт</li>
+              </ol>
+            </div>
           </div>
         </div>
 
-        <div style="height: 16px;"></div>
+        <div class="card">
+          <div class="section-title">Примечание</div>
+          <textarea id="reportNote" rows="4" placeholder="Дополнительные заметки..."></textarea>
+        </div>
 
-        <div class="card fade-in">
-          <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10.325 4.317C10.751 2.561 13.249 2.561 13.675 4.317C13.861 5.151 14.634 5.736 15.489 5.736C16.475 5.736 17.264 6.525 17.264 7.511C17.264 8.366 17.849 9.139 18.683 9.325C20.439 9.751 20.439 12.249 18.683 12.675C17.849 12.861 17.264 13.634 17.264 14.489C17.264 15.475 16.475 16.264 15.489 16.264C14.634 16.264 13.861 16.849 13.675 17.683C13.249 19.439 10.751 19.439 10.325 17.683C10.139 16.849 9.366 16.264 8.511 16.264C7.525 16.264 6.736 15.475 6.736 14.489C6.736 13.634 6.151 12.861 5.317 12.675C3.561 12.249 3.561 9.751 5.317 9.325C6.151 9.139 6.736 8.366 6.736 7.511C6.736 6.525 7.525 5.736 8.511 5.736C9.366 5.736 10.139 5.151 10.325 4.317Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Быстрые операции
-          </div>
-          <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
-            <button id="zeroAll" class="ghost">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Сбросить всё
-            </button>
-            <button id="loadSample" class="ghost">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 9H9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Загрузить пример
-            </button>
+        <div class="card">
+          <div class="section-title">Быстрые действия</div>
+          <div style="display: flex; gap: 10px;">
+            <button id="zeroAll" class="ghost">🔄 Сбросить</button>
+            <button id="loadSample" class="ghost">📋 Пример</button>
           </div>
         </div>
       </aside>
     </div>
-
-    <footer class="muted fade-in">
-      Данные сохраняются автоматически в вашем браузере. Для синхронизации между устройствами используйте Firebase.
-    </footer>
   </div>
 
-  <script>
-    // Firebase configuration - ВАША КОНФИГУРАЦИЯ
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzKU_mZSVJc6nJA1PTZcKuZ9e8SwuZKqU",
-      authDomain: "georges-1c626.firebaseapp.com",
-      databaseURL: "https://georges-1c626-default-rtdb.firebaseio.com",
-      projectId: "georges-1c626",
-      storageBucket: "georges-1c626.firebasestorage.app",
-      messagingSenderId: "490623110927",
-      appId: "1:490623110927:web:e82dfab4020dbd3e97387a",
-      measurementId: "G-MG6DYZLWZP"
-    };
+<script>
+// Firebase config - ПОЛНАЯ КОНФИГУРАЦИЯ
+const firebaseConfig = {
+  apiKey: "AIzaSyAzKU_mZSVJc6nJA1PTZcKuZ9e8SwuZKqU",
+  authDomain: "georges-1c626.firebaseapp.com",
+  databaseURL: "https://georges-1c626-default-rtdb.firebaseio.com",
+  projectId: "georges-1c626",
+  storageBucket: "georges-1c626.firebasestorage.app",
+  messagingSenderId: "490623110927",
+  appId: "1:490623110927:web:48780c508f49b73497387a",
+  measurementId: "G-N20JTJMKSL"
+};
 
-    // Initialize Firebase
-    try {
-      firebase.initializeApp(firebaseConfig);
-      console.log('Firebase инициализирован');
-    } catch (error) {
-      console.log('Firebase уже инициализирован');
-    }
+// Initialize Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+  console.log("Firebase инициализирован успешно");
+} catch (error) {
+  console.error("Ошибка инициализации Firebase:", error);
+}
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
+// Initialize Analytics
+const analytics = firebase.analytics();
 
-    // utils
-    const $ = sel => document.querySelector(sel);
-    const $$ = sel => document.querySelectorAll(sel);
-    const money = v => Number(v || 0).toFixed(2);
+// Utils
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const money = v => Number(v || 0).toFixed(2);
 
-    // elements
-    const authModal = $('#authModal');
-    const appContainer = $('#appContainer');
-    const passwordInput = $('#password');
-    const loginBtn = $('#loginBtn');
-    const lockBtn = $('#lockBtn');
-    const resetPasswordBtn = $('#resetPassword');
+// Elements
+const historyBtn = $('#historyBtn');
+const historyPanel = $('#historyPanel');
+const overlay = $('#overlay');
+const closeHistory = $('#closeHistory');
+const historyList = $('#historyList');
 
-    console.log('Элементы найдены:', {
-      authModal: !!authModal,
-      appContainer: !!appContainer,
-      passwordInput: !!passwordInput,
-      loginBtn: !!loginBtn,
-      resetPasswordBtn: !!resetPasswordBtn
-    });
+// Firebase elements
+const firebaseStatus = $('#firebaseStatus');
+const userInfo = $('#userInfo');
+const userAvatar = $('#userAvatar');
+const userEmail = $('#userEmail');
+const userId = $('#userId');
+const firebaseLogin = $('#firebaseLogin');
+const firebaseRegister = $('#firebaseRegister');
+const firebaseLogout = $('#firebaseLogout');
+const syncToFirebase = $('#syncToFirebase');
+const loadFromFirebase = $('#loadFromFirebase');
+const setupGuide = $('#setupGuide');
 
-    // Auth system
-    const APP_PASSWORD = 'admin123';
+const payrollTable = $('#payrollTable tbody');
+const expensesTable = $('#expensesTable tbody');
+const incomeTable = $('#incomeTable tbody');
+const payrollTotalEl = $('#payrollTotal');
+const expensesTotalEl = $('#expensesTotal');
+const incomeTotalEl = $('#incomeTotal');
+const sumPayroll = $('#sumPayroll');
+const sumExpenses = $('#sumExpenses');
+const sumIncome = $('#sumIncome');
+const profitEl = $('#profit');
+const revenueEl = $('#revenue');
+const periodStartEl = $('#periodStart');
+const periodEndEl = $('#periodEnd');
 
-    function checkAuth() {
-      console.log('Проверка аутентификации...');
-      const savedPassword = localStorage.getItem('cia_soft_password');
-      console.log('Сохраненный пароль:', savedPassword);
-      
-      if (!savedPassword) {
-        console.log('Пароль не найден, устанавливаем по умолчанию');
-        localStorage.setItem('cia_soft_password', btoa(APP_PASSWORD));
-        return false;
-      }
-      
-      const sessionAuth = sessionStorage.getItem('cia_soft_auth');
-      console.log('Сессия:', sessionAuth);
-      return sessionAuth === 'true';
-    }
+// State
+let state = {
+  periodStart: null,
+  periodEnd: null,
+  revenue: 0,
+  payroll: [],
+  expenses: [],
+  income: [],
+  note: '',
+  id: null
+}
 
-    function login(password) {
-      console.log('Попытка входа с паролем:', password);
-      const savedPassword = localStorage.getItem('cia_soft_password');
-      
-      if (btoa(password) === savedPassword) {
-        console.log('Пароль верный!');
-        sessionStorage.setItem('cia_soft_auth', 'true');
-        authModal.style.display = 'none';
-        appContainer.style.display = 'block';
-        return true;
-      }
-      console.log('Неверный пароль');
-      return false;
-    }
-
-    function logout() {
-      console.log('Выход из системы');
-      sessionStorage.removeItem('cia_soft_auth');
-      authModal.style.display = 'flex';
-      appContainer.style.display = 'none';
-      passwordInput.value = '';
-    }
-
-    // Initialize auth
-    console.log('Инициализация аутентификации...');
-    if (checkAuth()) {
-      console.log('Авторизован, показываем приложение');
-      authModal.style.display = 'none';
-      appContainer.style.display = 'block';
-    } else {
-      console.log('Не авторизован, показываем модальное окно');
-      authModal.style.display = 'flex';
-      appContainer.style.display = 'none';
-    }
-
-    // Auth event listeners
-    console.log('Добавление обработчиков событий...');
-
-    if (loginBtn) {
-      loginBtn.addEventListener('click', function() {
-        console.log('Кнопка входа нажата!');
-        const password = passwordInput.value;
-        console.log('Введенный пароль:', password);
-        
-        if (login(password)) {
-          console.log('Успешный вход');
-          showToast('Успешный вход в систему', 'success');
-        } else {
-          console.log('Ошибка входа');
-          showToast('Неверный пароль', 'error');
-          passwordInput.value = '';
-        }
-      });
-    } else {
-      console.error('Кнопка входа не найдена!');
-    }
-
-    if (resetPasswordBtn) {
-      resetPasswordBtn.addEventListener('click', function() {
-        console.log('Сброс пароля...');
-        localStorage.setItem('cia_soft_password', btoa('admin123'));
-        sessionStorage.setItem('cia_soft_auth', 'true');
-        console.log('Пароль сброшен, устанавливаем авторизацию');
-        authModal.style.display = 'none';
-        appContainer.style.display = 'block';
-        showToast('Пароль сброшен на admin123', 'success');
-      });
-    }
-
-    if (passwordInput) {
-      passwordInput.addEventListener('keypress', function(e) {
-        console.log('Клавиша нажата в поле пароля:', e.key);
-        if (e.key === 'Enter') {
-          console.log('Enter нажат в поле пароля');
-          const password = passwordInput.value;
-          if (login(password)) {
-            showToast('Успешный вход в систему', 'success');
-          } else {
-            showToast('Неверный пароль', 'error');
-            passwordInput.value = '';
-          }
-        }
-      });
-    }
-
-    if (lockBtn) {
-      lockBtn.addEventListener('click', function() {
-        console.log('Кнопка блокировки нажата');
-        logout();
-        showToast('Приложение заблокировано', 'success');
-      });
-    }
-
-    // Toast notification
-    function showToast(msg, type = '') {
-      console.log('Toast:', msg, type);
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        ${msg}
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    // ВРЕМЕННО: Автоматический вход для отладки
-    setTimeout(() => {
-      if (authModal.style.display !== 'none') {
-        console.log('Автоматический вход...');
-        if (login('admin123')) {
-          console.log('Автоматический вход выполнен');
-        }
-      }
-    }, 1000);
-
-  // Firebase initialization with proper authentication
-let auth, db;
-let isFirebaseConnected = false;
+// Firebase state
 let firebaseUser = null;
+let isFirebaseConnected = false;
 
-function initializeFirebase() {
-  try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-      console.log('🔥 Firebase initialized successfully');
-    }
-    
-    auth = firebase.auth();
-    db = firebase.firestore();
-    
-    // Set up auth state listener
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        firebaseUser = user;
-        isFirebaseConnected = true;
-        updateFirebaseUI(true);
-        console.log('✅ Firebase user authenticated:', user.email || 'Anonymous');
-        showToast('Успешное подключение к Firebase', 'success');
-        
-        // Test Firestore connection after auth
-        testFirestoreConnection();
-      } else {
-        firebaseUser = null;
-        isFirebaseConnected = false;
-        updateFirebaseUI(false);
-        console.log('⚠️ No user authenticated');
-        
-        // Try to sign in anonymously
-        signInAnonymously();
-      }
+// Test Firebase connection
+function testFirebaseConnection() {
+  firebaseStatus.textContent = "🟡 Проверка подключения...";
+  
+  // Test if Firebase is properly initialized
+  if (!firebase.apps.length) {
+    firebaseStatus.textContent = "🔴 Firebase не инициализирован";
+    return false;
+  }
+  
+  // Test Firestore connection
+  const testDoc = db.collection('test').doc('connection');
+  testDoc.set({test: true, timestamp: new Date()})
+    .then(() => {
+      firebaseStatus.textContent = "🟢 Firebase подключен";
+      isFirebaseConnected = true;
+      // Clean up test document
+      testDoc.delete();
+    })
+    .catch((error) => {
+      console.error("Ошибка подключения Firebase:", error);
+      firebaseStatus.textContent = "🔴 Ошибка подключения";
+      isFirebaseConnected = false;
     });
+  
+  return true;
+}
+
+// Firebase Authentication
+function initFirebaseAuth() {
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      firebaseUser = user;
+      isFirebaseConnected = true;
+      updateFirebaseUI(true);
+      showToast('Успешный вход в Firebase');
+      // Log login event
+      analytics.logEvent('login');
+    } else {
+      firebaseUser = null;
+      updateFirebaseUI(false);
+    }
+  }, (error) => {
+    console.error("Ошибка аутентификации:", error);
+    firebaseStatus.textContent = "🔴 Ошибка аутентификации";
+  });
+}
+
+function updateFirebaseUI(isSignedIn) {
+  if (isSignedIn) {
+    firebaseStatus.textContent = '🟢 Подключено';
+    firebaseStatus.className = 'auth-status connected';
+    userInfo.style.display = 'block';
+    firebaseLogin.style.display = 'none';
+    firebaseRegister.style.display = 'none';
+    firebaseLogout.style.display = 'block';
+    setupGuide.style.display = 'none';
     
-  } catch (error) {
-    console.error('❌ Firebase initialization failed:', error);
-    showToast('Ошибка подключения к Firebase. Работаем в оффлайн-режиме.', 'error');
-    isFirebaseConnected = false;
-    updateFirebaseUI(false);
+    // Update user info
+    userEmail.textContent = firebaseUser.email || 'Анонимный пользователь';
+    userId.textContent = `ID: ${firebaseUser.uid.substring(0, 8)}...`;
+    userAvatar.textContent = (firebaseUser.email || 'U').charAt(0).toUpperCase();
+  } else {
+    firebaseStatus.textContent = '🔴 Не авторизован';
+    firebaseStatus.className = 'auth-status disconnected';
+    userInfo.style.display = 'none';
+    firebaseLogin.style.display = 'block';
+    firebaseRegister.style.display = 'block';
+    firebaseLogout.style.display = 'none';
+    setupGuide.style.display = 'block';
   }
 }
 
-function signInAnonymously() {
-  auth.signInAnonymously()
-    .then((userCredential) => {
-      console.log('✅ Signed in anonymously');
-    })
-    .catch((error) => {
-      console.error('❌ Anonymous sign-in failed:', error);
-      showToast('Не удалось подключиться к Firebase', 'error');
-    });
-}
-
 function signInWithEmail() {
-  const email = prompt('Введите email для входа в Firebase:');
+  const email = prompt('Введите email для входа:');
   if (!email) return;
   
   const password = prompt('Введите пароль:');
@@ -1348,66 +414,66 @@ function signInWithEmail() {
   
   auth.signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
-      showToast('Успешный вход в Firebase', 'success');
+      showToast('Успешный вход в Firebase');
     })
     .catch((error) => {
       console.error('Ошибка входа:', error);
-      let errorMessage = 'Ошибка входа: ';
-      
-      switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage += 'Пользователь не найден.';
-          // Предложить зарегистрироваться
-          if (confirm('Пользователь не найден. Хотите зарегистрироваться?')) {
-            registerWithEmail(email, password);
-          }
-          break;
-        case 'auth/wrong-password':
-          errorMessage += 'Неверный пароль.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage += 'Неверный формат email.';
-          break;
-        default:
-          errorMessage += error.message;
+      let errorMessage = 'Ошибка входа';
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Пользователь не найден. Зарегистрируйтесь.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Неверный пароль';
+      } else {
+        errorMessage = 'Ошибка входа: ' + error.message;
       }
-      
       showToast(errorMessage, 'error');
     });
 }
 
-function registerWithEmail(email, password) {
+function registerWithEmail() {
+  const email = prompt('Введите email для регистрации:');
+  if (!email) return;
+  
+  const password = prompt('Введите пароль (минимум 6 символов):');
+  if (!password) return;
+  
+  if (password.length < 6) {
+    showToast('Пароль должен содержать минимум 6 символов', 'error');
+    return;
+  }
+  
   auth.createUserWithEmailAndPassword(email, password)
     .then((userCredential) => {
-      showToast('Аккаунт успешно создан!', 'success');
+      showToast('Аккаунт успешно создан!');
+      // Log registration event
+      analytics.logEvent('sign_up');
     })
     .catch((error) => {
       console.error('Ошибка регистрации:', error);
-      showToast('Ошибка регистрации: ' + error.message, 'error');
+      let errorMessage = 'Ошибка регистрации';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Email уже используется';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Неверный формат email';
+      } else {
+        errorMessage = 'Ошибка регистрации: ' + error.message;
+      }
+      showToast(errorMessage, 'error');
     });
 }
 
-function testFirestoreConnection() {
-  if (!db || !firebaseUser) return;
-  
-  const testRef = db.collection('users').doc(firebaseUser.uid).collection('connectionTests').doc('test');
-  testRef.set({
-    timestamp: new Date(),
-    status: 'connected',
-    userId: firebaseUser.uid
-  }, { merge: true })
-  .then(() => {
-    console.log('✅ Firestore connection test passed');
-    isFirebaseConnected = true;
-  })
-  .catch((error) => {
-    console.error('❌ Firestore connection test failed:', error);
-    isFirebaseConnected = false;
-    updateFirebaseUI(false);
-  });
+function signOut() {
+  auth.signOut()
+    .then(() => {
+      showToast('Выход из Firebase выполнен');
+    })
+    .catch((error) => {
+      console.error('Ошибка выхода:', error);
+      showToast('Ошибка выхода: ' + error.message, 'error');
+    });
 }
 
-// Firebase Firestore functions with proper error handling
+// Firebase Firestore functions
 function saveToFirebase() {
   if (!isFirebaseConnected || !firebaseUser) {
     showToast('Сначала войдите в Firebase', 'error');
@@ -1422,27 +488,20 @@ function saveToFirebase() {
     state.id = generateId();
   }
   
-  // Add timestamp and user info
+  // Add timestamp
   state.updatedAt = new Date().toISOString();
   state.createdAt = state.createdAt || state.updatedAt;
   state.userId = firebaseUser.uid;
   
   reportsRef.doc(state.id).set(state)
     .then(() => {
-      showToast('Данные сохранены в Firebase', 'success');
-      console.log('✅ Data saved to Firebase');
+      showToast('Данные сохранены в Firebase');
+      // Log save event
+      analytics.logEvent('save_to_cloud');
     })
     .catch((error) => {
-      console.error('❌ Ошибка сохранения в Firebase:', error);
-      
-      // Проверяем конкретные ошибки
-      if (error.code === 'permission-denied') {
-        showToast('Ошибка доступа. Проверьте правила безопасности Firebase.', 'error');
-      } else if (error.code === 'unavailable') {
-        showToast('Firebase недоступен. Данные сохранены локально.', 'warning');
-      } else {
-        showToast('Ошибка сохранения: ' + error.message, 'error');
-      }
+      console.error('Ошибка сохранения в Firebase:', error);
+      showToast('Ошибка сохранения: ' + error.message, 'error');
     });
 }
 
@@ -1454,12 +513,12 @@ function loadFromFirebase() {
   
   const reportsRef = db.collection('users').doc(firebaseUser.uid).collection('reports');
   
-  reportsRef.orderBy('updatedAt', 'desc').get()
+  reportsRef.orderBy('updatedAt', 'desc').limit(10).get()
     .then((querySnapshot) => {
       const reports = {};
       
       if (querySnapshot.empty) {
-        showToast('В Firebase нет сохраненных отчетов', 'info');
+        showToast('Нет сохранённых отчётов в облаке');
         return;
       }
       
@@ -1474,104 +533,372 @@ function loadFromFirebase() {
         reports[dateKey].push(report);
       });
       
-      // Save to localStorage for offline use
-      localStorage.setItem('cia_soft_reports', JSON.stringify(reports));
-      
       // Load the most recent report
-      const today = new Date().toISOString().split('T')[0];
-      if (reports[today] && reports[today].length > 0) {
-        state = reports[today][reports[today].length - 1];
-      } else if (Object.keys(reports).length > 0) {
-        // Load the first available report
-        const firstDate = Object.keys(reports)[0];
-        state = reports[firstDate][0];
-      }
-      
+      const firstDate = Object.keys(reports)[0];
+      state = reports[firstDate][0];
       render();
-      showToast('Данные загружены из Firebase', 'success');
-      console.log('✅ Data loaded from Firebase');
+      showToast('Данные загружены из Firebase');
+      // Log load event
+      analytics.logEvent('load_from_cloud');
     })
     .catch((error) => {
-      console.error('❌ Ошибка загрузки из Firebase:', error);
-      
-      if (error.code === 'permission-denied') {
-        showToast('Ошибка доступа к данным Firebase', 'error');
-      } else {
-        showToast('Ошибка загрузки: ' + error.message, 'error');
-      }
+      console.error('Ошибка загрузки из Firebase:', error);
+      showToast('Ошибка загрузки: ' + error.message, 'error');
     });
 }
 
-// Update Firebase UI function
-function updateFirebaseUI(isConnected) {
-  const firebaseStatus = document.getElementById('firebaseStatus');
-  const userInfo = document.getElementById('userInfo');
-  const firebaseLogin = document.getElementById('firebaseLogin');
-  const firebaseLogout = document.getElementById('firebaseLogout');
-  
-  if (!firebaseStatus) return;
-  
-  if (isConnected && firebaseUser) {
-    firebaseStatus.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Подключено к Firebase
-    `;
-    firebaseStatus.className = 'auth-status connected';
-    
-    if (userInfo) userInfo.style.display = 'block';
-    if (firebaseLogin) firebaseLogin.style.display = 'none';
-    if (firebaseLogout) firebaseLogout.style.display = 'block';
-    
-    // Update user info
-    const userEmail = document.getElementById('userEmail');
-    const userId = document.getElementById('userId');
-    const userAvatar = document.getElementById('userAvatar');
-    
-    if (userEmail) {
-      userEmail.textContent = firebaseUser.email || 
-        (firebaseUser.isAnonymous ? 'Анонимный пользователь' : 'Пользователь Firebase');
-    }
-    if (userId) userId.textContent = `ID: ${firebaseUser.uid.substring(0, 8)}...`;
-    if (userAvatar) {
-      userAvatar.textContent = (firebaseUser.email || 
-        (firebaseUser.isAnonymous ? 'A' : 'U')).charAt(0).toUpperCase();
-    }
-  } else {
-    firebaseStatus.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Не подключено
-    `;
-    firebaseStatus.className = 'auth-status disconnected';
-    
-    if (userInfo) userInfo.style.display = 'none';
-    if (firebaseLogin) firebaseLogin.style.display = 'block';
-    if (firebaseLogout) firebaseLogout.style.display = 'none';
-  }
-}
+// Firebase event listeners
+firebaseLogin.addEventListener('click', signInWithEmail);
+firebaseRegister.addEventListener('click', registerWithEmail);
+firebaseLogout.addEventListener('click', signOut);
+syncToFirebase.addEventListener('click', saveToFirebase);
+loadFromFirebase.addEventListener('click', loadFromFirebase);
 
-// Initialize Firebase when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  initializeFirebase();
-  
-  // Add event listeners for Firebase buttons
-  const firebaseLogin = document.getElementById('firebaseLogin');
-  const firebaseLogout = document.getElementById('firebaseLogout');
-  const syncToFirebase = document.getElementById('syncToFirebase');
-  const loadFromFirebaseBtn = document.getElementById('loadFromFirebase');
-  
-  if (firebaseLogin) firebaseLogin.addEventListener('click', signInWithEmail);
-  if (firebaseLogout) firebaseLogout.addEventListener('click', () => auth.signOut());
-  if (syncToFirebase) syncToFirebase.addEventListener('click', saveToFirebase);
-  if (loadFromFirebaseBtn) loadFromFirebaseBtn.addEventListener('click', loadFromFirebase);
+// Initialize Firebase connection
+setTimeout(() => {
+  testFirebaseConnection();
+  initFirebaseAuth();
+}, 1000);
+
+// History panel
+historyBtn.addEventListener('click', () => {
+  historyPanel.classList.add('open');
+  overlay.classList.add('active');
+  renderHistoryList();
 });
 
-  </script>
+closeHistory.addEventListener('click', () => {
+  historyPanel.classList.remove('open');
+  overlay.classList.remove('active');
+});
+
+overlay.addEventListener('click', closeHistory.click.bind(closeHistory));
+
+// Tabs
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('.tab').forEach(t => t.classList.remove('active'));
+    $$('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    $(`#${tab.dataset.tab}-tab`).classList.add('active');
+  });
+});
+
+// Generate ID
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// Save/load
+function saveToStorage(){
+  if (!state.id) state.id = generateId();
+  
+  const reports = JSON.parse(localStorage.getItem('cia_soft_reports') || '{}');
+  const dateKey = state.periodStart || new Date().toISOString().split('T')[0];
+  
+  if (!reports[dateKey]) reports[dateKey] = [];
+  
+  const existingIndex = reports[dateKey].findIndex(r => r.id === state.id);
+  if (existingIndex >= 0) {
+    reports[dateKey][existingIndex] = state;
+  } else {
+    reports[dateKey].push(state);
+  }
+  
+  localStorage.setItem('cia_soft_reports', JSON.stringify(reports));
+  showToast('Данные сохранены локально');
+}
+
+function loadFromStorage(){
+  return JSON.parse(localStorage.getItem('cia_soft_reports') || '{}');
+}
+
+function renderHistoryList() {
+  const reports = loadFromStorage();
+  historyList.innerHTML = '';
+  
+  const allReports = [];
+  for (const date in reports) {
+    reports[date].forEach(report => allReports.push({date, report}));
+  }
+  
+  allReports.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  if (allReports.length === 0) {
+    historyList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">Нет сохранённых отчётов</div>';
+    return;
+  }
+  
+  allReports.forEach(({date, report}) => {
+    const payrollSum = report.payroll.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const expensesSum = report.expenses.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const incomeSum = report.income.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const revenue = Number(report.revenue) || 0;
+    const profit = revenue + incomeSum - payrollSum - expensesSum;
+    
+    const item = document.createElement('div');
+    item.className = `history-item ${report.id === state.id ? 'active' : ''}`;
+    item.style.cssText = 'padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer;';
+    item.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 5px;">${formatDate(date)}</div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--muted);">
+        <span>Выручка: ${money(revenue)}</span>
+        <span>Прибыль: ${money(profit)}</span>
+      </div>
+    `;
+    item.addEventListener('click', () => {
+      state = JSON.parse(JSON.stringify(report));
+      render();
+      closeHistory.click();
+      showToast('Отчёт загружен');
+    });
+    historyList.appendChild(item);
+  });
+}
+
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString('ru-RU');
+}
+
+function render(){
+  if (!state.periodStart) state.periodStart = new Date().toISOString().split('T')[0];
+  if (!state.periodEnd) state.periodEnd = new Date().toISOString().split('T')[0];
+  
+  periodStartEl.value = state.periodStart;
+  periodEndEl.value = state.periodEnd;
+  revenueEl.value = state.revenue;
+  $('#reportNote').value = state.note || '';
+
+  // Render tables
+  payrollTable.innerHTML = '';
+  state.payroll.forEach((p, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td contenteditable>${p.name}</td>
+      <td contenteditable>${p.role}</td>
+      <td contenteditable>${money(p.amount)}</td>
+      <td><button onclick="state.payroll.splice(${idx},1); render();" class="ghost">✖</button></td>`;
+    payrollTable.appendChild(tr);
+  });
+
+  expensesTable.innerHTML = '';
+  state.expenses.forEach((e, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td contenteditable>${e.category}</td>
+      <td contenteditable>${e.vendor}</td>
+      <td contenteditable>${money(e.amount)}</td>
+      <td><button onclick="state.expenses.splice(${idx},1); render();" class="ghost">✖</button></td>`;
+    expensesTable.appendChild(tr);
+  });
+
+  incomeTable.innerHTML = '';
+  state.income.forEach((i, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td contenteditable>${i.source}</td>
+      <td contenteditable>${i.type}</td>
+      <td contenteditable>${money(i.amount)}</td>
+      <td><button onclick="state.income.splice(${idx},1); render();" class="ghost">✖</button></td>`;
+    incomeTable.appendChild(tr);
+  });
+
+  updateTotals();
+  attachEditableListeners();
+}
+
+function updateTotals(){
+  const payrollSum = state.payroll.reduce((s,r) => s + (Number(r.amount)||0), 0);
+  const expensesSum = state.expenses.reduce((s,r) => s + (Number(r.amount)||0), 0);
+  const incomeSum = state.income.reduce((s,r) => s + (Number(r.amount)||0), 0);
+  const revenue = Number(state.revenue)||0;
+  const profit = revenue + incomeSum - payrollSum - expensesSum;
+
+  payrollTotalEl.textContent = money(payrollSum);
+  expensesTotalEl.textContent = money(expensesSum);
+  incomeTotalEl.textContent = money(incomeSum);
+  sumPayroll.textContent = money(payrollSum);
+  sumExpenses.textContent = money(expensesSum);
+  sumIncome.textContent = money(incomeSum);
+  profitEl.textContent = money(profit);
+  profitEl.style.color = profit < 0 ? 'var(--danger)' : profit > 0 ? 'var(--success)' : 'var(--muted)';
+}
+
+function attachEditableListeners(){
+  // Table cells
+  document.addEventListener('input', (e) => {
+    if (!e.target.hasAttribute('contenteditable')) return;
+    
+    const cell = e.target;
+    const tr = cell.closest('tr');
+    if (!tr) return;
+    
+    const idx = Array.from(tr.parentElement.children).indexOf(tr);
+    if (idx < 0) return;
+    
+    const cells = tr.querySelectorAll('[contenteditable]');
+    
+    if (tr.parentElement === payrollTable) {
+      state.payroll[idx] = {
+        name: cells[0].textContent.trim(),
+        role: cells[1].textContent.trim(),
+        amount: parseFloat(cells[2].textContent.replace(',','.')) || 0
+      };
+    } else if (tr.parentElement === expensesTable) {
+      state.expenses[idx] = {
+        category: cells[0].textContent.trim(),
+        vendor: cells[1].textContent.trim(),
+        amount: parseFloat(cells[2].textContent.replace(',','.')) || 0
+      };
+    } else if (tr.parentElement === incomeTable) {
+      state.income[idx] = {
+        source: cells[0].textContent.trim(),
+        type: cells[1].textContent.trim(),
+        amount: parseFloat(cells[2].textContent.replace(',','.')) || 0
+      };
+    }
+    
+    updateTotals();
+  });
+
+  // Note field
+  $('#reportNote').addEventListener('input', (e) => {
+    state.note = e.target.value;
+  });
+}
+
+// Actions
+$('#addPayroll').onclick = () => {
+  state.payroll.push({name: 'Новый сотрудник', role: '', amount: 0});
+  render();
+  $('.tab[data-tab="payroll"]').click();
+};
+
+$('#addExpense').onclick = () => {
+  state.expenses.push({category: 'Расходы', vendor: '', amount: 0});
+  render();
+  $('.tab[data-tab="expenses"]').click();
+};
+
+$('#addIncome').onclick = () => {
+  state.income.push({source: 'Доходы', type: '', amount: 0});
+  render();
+  $('.tab[data-tab="income"]').click();
+};
+
+$('#zeroAll').onclick = () => {
+  if(confirm('Сбросить все данные?')) {
+    state = {
+      periodStart: new Date().toISOString().split('T')[0],
+      periodEnd: new Date().toISOString().split('T')[0],
+      revenue: 0,
+      payroll: [],
+      expenses: [],
+      income: [],
+      note: '',
+      id: generateId()
+    };
+    render();
+  }
+};
+
+$('#loadSample').onclick = () => {
+  state = {
+    periodStart: new Date().toISOString().split('T')[0],
+    periodEnd: new Date().toISOString().split('T')[0],
+    revenue: 125000,
+    payroll: [
+      {name: 'Иванов А.П.', role: 'Шеф-повар', amount: 35000},
+      {name: 'Петрова М.И.', role: 'Официант', amount: 15000}
+    ],
+    expenses: [
+      {category: 'Поставщики', vendor: 'ООО Продукты', amount: 25000},
+      {category: 'Аренда', vendor: 'АРЕНДОДАТЕЛЬ', amount: 20000}
+    ],
+    income: [
+      {source: 'Кейтеринг', type: 'Услуги', amount: 15000}
+    ],
+    note: 'Пример данных',
+    id: generateId()
+  };
+  render();
+};
+
+$('#saveBtn').onclick = () => {
+  saveToStorage();
+  if (isFirebaseConnected && firebaseUser) {
+    saveToFirebase();
+  }
+};
+
+$('#exportCsv').onclick = () => {
+  const rows = [
+    ['Период', state.periodStart, state.periodEnd],
+    [],
+    ['Зарплаты'],
+    ['Имя', 'Должность', 'Сумма'],
+    ...state.payroll.map(p => [p.name, p.role, money(p.amount)]),
+    [],
+    ['Расходы'],
+    ['Категория', 'Получатель', 'Сумма'],
+    ...state.expenses.map(e => [e.category, e.vendor, money(e.amount)]),
+    [],
+    ['Доходы'],
+    ['Источник', 'Тип', 'Сумма'],
+    ...state.income.map(i => [i.source, i.type, money(i.amount)]),
+    [],
+    ['Выручка', money(state.revenue)],
+    ['Итого зарплаты', money(state.payroll.reduce((s,r) => s + (Number(r.amount)||0), 0))],
+    ['Итого расходы', money(state.expenses.reduce((s,r) => s + (Number(r.amount)||0), 0))],
+    ['Итого доходы', money(state.income.reduce((s,r) => s + (Number(r.amount)||0), 0))],
+    ['Прибыль', money((Number(state.revenue)||0) + state.income.reduce((s,r) => s + (Number(r.amount)||0), 0) - state.payroll.reduce((s,r) => s + (Number(r.amount)||0), 0) - state.expenses.reduce((s,r) => s + (Number(r.amount)||0), 0))]
+  ];
+
+  const csv = rows.map(r => r.map(cell => `"${String(cell||'')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'report.csv';
+  a.click();
+  showToast('CSV экспортирован');
+};
+
+// Input sync
+periodStartEl.onchange = e => state.periodStart = e.target.value;
+periodEndEl.onchange = e => state.periodEnd = e.target.value;
+revenueEl.oninput = e => { state.revenue = parseFloat(e.target.value)||0; updateTotals(); };
+
+// Toast
+function showToast(msg, type = '') {
+  const toast = document.createElement('div');
+  toast.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: ${type === 'error' ? 'var(--danger)' : '#0f172a'}; color: white; padding: 10px 15px; border-radius: 8px; z-index: 1000;`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Initial load
+const reports = loadFromStorage();
+const today = new Date().toISOString().split('T')[0];
+
+if (Object.keys(reports).length > 0 && reports[today] && reports[today].length > 0) {
+  state = reports[today][reports[today].length - 1];
+} else {
+  state.id = generateId();
+  state.periodStart = today;
+  state.periodEnd = today;
+}
+
+render();
+
+// Auto-save
+setInterval(() => {
+  saveToStorage();
+  if (isFirebaseConnected && firebaseUser) {
+    saveToFirebase();
+  }
+}, 20000);
+</script>
 </body>
 </html>
