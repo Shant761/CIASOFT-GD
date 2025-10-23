@@ -42,7 +42,7 @@
     .overlay.active{display:block}
     .auth-status{font-weight:600;margin-bottom:10px}
     .user-info{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-    .user-avatar{width:36px;height:36;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
     .muted{color:var(--muted);font-weight:500}
     footer{margin-top:16px;text-align:center;color:var(--muted);font-size:13px}
     
@@ -107,6 +107,27 @@
       color: var(--muted);
     }
     
+    /* Стили для кнопки выхода с замочком */
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover {
+      background: #fef2f2;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    
     @media(max-width:1000px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -121,8 +142,8 @@
         </div>
       </div>
       
-      <h2>Добро пожаловать</h2>
-      <p>Для работы с финансовыми отчётами требуется авторизация через Firebase</p>
+      <h2>Требуется авторизация</h2>
+      <p>Для работы с финансовыми отчётами требуется войти в систему</p>
       
       <div class="auth-form">
         <input type="email" id="authEmail" placeholder="Ваш email" autocomplete="email">
@@ -166,6 +187,7 @@
         <button id="saveBtn">💾 Сохранить в облако</button>
         <button id="historyBtn" class="ghost">📊 История</button>
         <button id="exportCsv" class="ghost">📄 Экспорт</button>
+        <button class="logout-btn" id="logoutBtn" title="Выйти">🔒</button>
       </div>
     </header>
 
@@ -238,8 +260,10 @@
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:700">Финансовая сводка</div>
-            <div id="authControls" style="display:flex;gap:8px">
-              <button id="authBtn" class="ghost">Войти</button>
+            <div id="authControls" style="display:flex;gap:8px;align-items:center">
+              <div id="userInfo" style="display:none">
+                <span id="userEmailDisplay" style="font-weight:600;font-size:14px"></span>
+              </div>
             </div>
           </div>
 
@@ -356,6 +380,9 @@
     loginBtn: $('#loginBtn'),
     registerBtn: $('#registerBtn'),
     mainContent: $('#mainContent'),
+    logoutBtn: $('#logoutBtn'),
+    userInfo: $('#userInfo'),
+    userEmailDisplay: $('#userEmailDisplay'),
     
     // tabs
     tabs: $$('.tab'),
@@ -387,7 +414,6 @@
     closeHistoryBtn: $('#closeHistoryBtn'),
     historyList: $('#historyList'),
     firebaseStatus: $('#firebaseStatus'),
-    authBtn: $('#authBtn'),
     userBlock: $('#userBlock'),
     userEmail: $('#userEmail'),
     userUid: $('#userUid'),
@@ -418,6 +444,9 @@
   function showAuthModal() {
     elements.authModal.style.display = 'flex';
     elements.mainContent.style.display = 'none';
+    // Очищаем поля при показе модального окна
+    elements.authEmail.value = '';
+    elements.authPassword.value = '';
   }
 
   async function handleLogin() {
@@ -537,6 +566,17 @@
   // Allow submitting form with Enter key
   elements.authPassword.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleLogin();
+  });
+
+  // Logout button
+  elements.logoutBtn.addEventListener('click', async () => {
+    try {
+      await auth.signOut();
+      showToast('Выход выполнен', 'success');
+      showAuthModal();
+    } catch (err) {
+      showToast('Ошибка выхода: ' + (err.message||''), 'error');
+    }
   });
 
   // Tabs
@@ -672,20 +712,6 @@
   // Load history from Firestore
   elements.loadHistoryBtn.addEventListener('click', fetchHistoryFromFirestore);
 
-  // Auth button (sign in / sign out)
-  elements.authBtn.addEventListener('click', async () => {
-    if (!currentUser) {
-      showAuthModal();
-    } else {
-      try {
-        await auth.signOut();
-        showToast('Выход выполнен', 'success');
-      } catch (err) {
-        showToast('Ошибка выхода: ' + (err.message||''), 'error');
-      }
-    }
-  });
-
   // ---------- History panel ----------
   function openHistoryPanel(){
     elements.historyPanel.classList.add('open');
@@ -803,18 +829,32 @@
     currentUser = user;
     if (user) {
       elements.userBlock.style.display = 'block';
+      elements.userInfo.style.display = 'flex';
       elements.userEmail.textContent = user.email || 'Аноним';
+      elements.userEmailDisplay.textContent = user.email || 'Аноним';
       elements.userUid.textContent = `ID: ${user.uid.slice(0,8)}...`;
       elements.userAvatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
-      elements.authBtn.textContent = 'Выйти';
       setFirebaseStatus('Подключено', true);
       showMainApp();
+      
+      // Принудительно разлогиниваем при обновлении страницы
+      // Это гарантирует, что каждый раз нужно входить заново
+      window.addEventListener('beforeunload', () => {
+        auth.signOut();
+      });
     } else {
       elements.userBlock.style.display = 'none';
-      elements.authBtn.textContent = 'Войти';
+      elements.userInfo.style.display = 'none';
       setFirebaseStatus('Не авторизован', false);
       showAuthModal();
     }
+  });
+
+  // Принудительный выход при загрузке страницы
+  window.addEventListener('load', () => {
+    auth.signOut().catch(() => {
+      // Игнорируем ошибки, если пользователь уже вышел
+    });
   });
 
   // Test basic Firestore connection
@@ -848,8 +888,11 @@
     // initial render
     renderAll();
     
-    // Show auth modal by default (will be hidden if user is already logged in)
+    // Принудительно показываем модальное окно авторизации при загрузке
     showAuthModal();
+    
+    // Принудительно разлогиниваем при загрузке
+    auth.signOut().catch(() => {});
   })();
 
 })();
