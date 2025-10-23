@@ -3,95 +3,167 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CIA SOFT - Финансовый отчёт</title>
+  <title>CIA SOFT — Финансовый отчёт (Firebase)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
   <style>
-    :root {
-      --bg: #f8fafc; --card: #ffffff; --accent: #4f46e5; --accent-light: #6366f1;
-      --muted: #64748b; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-      --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    :root{
+      --bg:#f7fafc; --card:#fff; --accent:#4f46e5; --muted:#64748b;
+      --success:#10b981; --danger:#ef4444; --border:#e6eef9; --shadow: 0 6px 18px rgba(12,24,50,0.06);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #0f172a; min-height: 100vh; line-height: 1.5; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
-    h1 { font-size: 20px; font-weight: 700; }
-    .subtitle { font-size: 13px; color: var(--muted); }
-    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
-    .grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
-    .section-title { font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
-    .controls { display: flex; gap: 10px; }
-    label { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 5px; display: block; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-    th { font-size: 13px; color: var(--muted); font-weight: 500; }
-    td[contenteditable] { background: #fbfdff; border-radius: 4px; }
-    button { background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
-    button:hover { background: var(--accent-light); }
-    button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); }
-    button.warn { background: var(--danger); }
-    .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    .small-card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); }
-    .small-card.payroll { border-top: 3px solid var(--accent); }
-    .small-card.expenses { border-top: 3px solid var(--warning); }
-    .small-card.income { border-top: 3px solid #8b5cf6; }
-    .small-card.profit { border-top: 3px solid var(--success); }
-    .k { font-size: 18px; font-weight: 700; margin-top: 5px; }
-    .history-panel { position: fixed; top:0; right:-350px; width:350px; height:100%; background: white; box-shadow: var(--shadow); z-index: 999; transition: right 0.3s; padding: 20px; overflow-y: auto; }
-    .history-panel.open { right: 0; }
-    .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
-    .overlay.active { display: block; }
-    .tabs { display: flex; gap: 4px; margin-bottom: 15px; background: #f1f5f9; padding: 4px; border-radius: 8px; width: fit-content; }
-    .tab { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-    .tab.active { background: white; box-shadow: var(--shadow); }
-    .firebase-section { background: #f0f9ff; padding: 15px; border-radius: 8px; border: 1px dashed #7dd3fc; margin-top: 15px; }
-    .auth-status { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 500; }
-    .auth-status.connected { color: var(--success); }
-    .auth-status.disconnected { color: var(--muted); }
-    .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
-    .setup-guide { background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 12px; margin-top: 10px; font-size: 12px; }
-    .setup-guide h4 { margin: 0 0 8px 0; color: #ea580c; }
-    .setup-guide ol { margin: 0; padding-left: 16px; }
-    .setup-guide li { margin-bottom: 4px; }
-    @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { 
-      .container { padding: 15px; } 
-      header { flex-direction: column; gap: 15px; align-items: flex-start; }
-      .controls { width: 100%; justify-content: center; }
-      .summary { grid-template-columns: 1fr; }
+    *{box-sizing:border-box}
+    body{font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:#0f172a; margin:0; min-height:100vh}
+    .container{max-width:1200px;margin:24px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);gap:12px}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo-icon{width:40px;height:40px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    h1{font-size:18px;margin:0}
+    .subtitle{font-size:13px;color:var(--muted)}
+    .controls{display:flex;gap:8px}
+    button{border:0;background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid var(--border)}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:20px;margin-top:18px}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+    .tabs{display:flex;gap:6px;margin-bottom:12px}
+    .tab{padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;background:#f1f5f9}
+    .tab.active{background:var(--card);box-shadow:0 4px 10px rgba(15,23,42,0.04)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=date], input[type=number], textarea, select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:14px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
+    td[contenteditable]{background:#fbfdff;border-radius:4px}
+    .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+    .small-card{background:#fff;padding:12px;border-radius:10px;text-align:center;box-shadow:var(--shadow);font-weight:600}
+    .history-panel{position:fixed;right:-420px;top:0;width:420px;height:100%;background:#fff;box-shadow:var(--shadow);z-index:999;transition:right .25s;padding:18px;overflow:auto}
+    .history-panel.open{right:0}
+    .overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;z-index:998}
+    .overlay.active{display:block}
+    .auth-status{font-weight:600;margin-bottom:10px}
+    .user-info{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+    .user-avatar{width:36px;height:36;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .muted{color:var(--muted);font-weight:500}
+    footer{margin-top:16px;text-align:center;color:var(--muted);font-size:13px}
+    
+    /* Новые стили для модального окна авторизации */
+    .auth-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
     }
+    .auth-modal-content {
+      background: var(--card);
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+    }
+    .auth-modal h2 {
+      margin: 0 0 16px 0;
+      font-size: 24px;
+    }
+    .auth-modal p {
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .auth-form input {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .auth-modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .auth-modal-buttons button {
+      flex: 1;
+      padding: 12px;
+    }
+    .demo-note {
+      margin-top: 20px;
+      padding: 12px;
+      background: #f0f9ff;
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    
+    @media(max-width:1000px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="overlay" id="overlay"></div>
-  <div class="history-panel" id="historyPanel">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <div class="section-title">История отчётов</div>
-      <button id="closeHistory" class="ghost">✖</button>
+  <!-- Модальное окно авторизации -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-modal-content">
+      <div class="logo" style="justify-content:center;margin-bottom:16px">
+        <div class="logo-icon">CIA</div>
+        <div>
+          <h1 style="font-size:20px">Финансовый отчёт</h1>
+        </div>
+      </div>
+      
+      <h2>Добро пожаловать</h2>
+      <p>Для работы с финансовыми отчётами требуется авторизация через Firebase</p>
+      
+      <div class="auth-form">
+        <input type="email" id="authEmail" placeholder="Ваш email" autocomplete="email">
+        <input type="password" id="authPassword" placeholder="Пароль" autocomplete="current-password">
+      </div>
+      
+      <div class="auth-modal-buttons">
+        <button id="loginBtn">Войти</button>
+        <button id="registerBtn" class="ghost">Регистрация</button>
+      </div>
+      
+      <div class="demo-note">
+        <strong>Демо-доступ:</strong><br>
+        Email: demo@cia-soft.ru<br>
+        Пароль: demodemo
+      </div>
     </div>
-    <div id="historyList"></div>
   </div>
 
-  <div class="container" id="appContainer">
+  <div class="overlay" id="overlay"></div>
+
+  <div class="history-panel" id="historyPanel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:700">История отчётов</div>
+      <div><button id="closeHistoryBtn" class="ghost">Закрыть</button></div>
+    </div>
+    <div id="historyList" style="display:grid;gap:8px"></div>
+  </div>
+
+  <div class="container" id="mainContent" style="display:none">
     <header>
       <div class="logo">
         <div class="logo-icon">CIA</div>
         <div>
           <h1>Финансовый отчёт</h1>
-          <div class="subtitle">Управление финансами ресторана</div>
+          <div class="subtitle">Синхронизация только через Firebase</div>
         </div>
       </div>
+
       <div class="controls">
-        <button id="saveBtn">💾 Сохранить</button>
+        <button id="saveBtn">💾 Сохранить в облако</button>
         <button id="historyBtn" class="ghost">📊 История</button>
         <button id="exportCsv" class="ghost">📄 Экспорт</button>
       </div>
@@ -100,805 +172,687 @@
     <div class="grid">
       <main>
         <div class="card">
-          <div class="tabs">
+          <div class="tabs" role="tablist">
             <div class="tab active" data-tab="period">Период</div>
             <div class="tab" data-tab="payroll">Зарплаты</div>
             <div class="tab" data-tab="expenses">Расходы</div>
             <div class="tab" data-tab="income">Доходы</div>
           </div>
 
-          <div class="tab-content active" id="period-tab">
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 250px;">
-                <div class="section-title">Период отчёта</div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                  <div style="flex: 1;">
-                    <label>Начало</label>
-                    <input type="date" id="periodStart">
-                  </div>
-                  <div>—</div>
-                  <div style="flex: 1;">
-                    <label>Конец</label>
-                    <input type="date" id="periodEnd">
-                  </div>
-                </div>
+          <section id="period" class="tab-panel">
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:220px">
+                <label>Начало</label>
+                <input type="date" id="periodStart">
               </div>
-              <div style="width: 200px;">
-                <div class="section-title">Выручка за период</div>
+              <div style="flex:1;min-width:220px">
+                <label>Конец</label>
+                <input type="date" id="periodEnd">
+              </div>
+              <div style="width:220px">
+                <label>Выручка</label>
                 <input type="number" id="revenue" step="0.01" placeholder="0.00">
               </div>
             </div>
-          </div>
+          </section>
 
-          <div class="tab-content" id="payroll-tab">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-              <div class="section-title">Зарплаты сотрудников</div>
-              <div>
-                <button id="addPayroll">+ Добавить</button>
-              </div>
+          <section id="payroll" class="tab-panel" style="display:none;margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Зарплаты</div>
+              <div><button id="addPayroll">+ Добавить</button></div>
             </div>
-            <table id="payrollTable">
-              <thead><tr><th>Имя</th><th>Должность</th><th>Сумма</th><th width="40"></th></tr></thead>
-              <tbody></tbody>
+            <table aria-label="Таблица зарплат">
+              <thead><tr><th>Имя</th><th>Должность</th><th>Сумма</th><th></th></tr></thead>
+              <tbody id="payrollBody"></tbody>
               <tfoot><tr><th colspan="2">Итого</th><th id="payrollTotal">0.00</th><th></th></tr></tfoot>
             </table>
-          </div>
+          </section>
 
-          <div class="tab-content" id="expenses-tab">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-              <div class="section-title">Расходы ресторана</div>
-              <div>
-                <button id="addExpense">+ Добавить</button>
-              </div>
+          <section id="expenses" class="tab-panel" style="display:none;margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Расходы</div>
+              <div><button id="addExpense">+ Добавить</button></div>
             </div>
-            <table id="expensesTable">
-              <thead><tr><th>Категория</th><th>Получатель</th><th>Сумма</th><th width="40"></th></tr></thead>
-              <tbody></tbody>
+            <table aria-label="Таблица расходов">
+              <thead><tr><th>Категория</th><th>Получатель</th><th>Сумма</th><th></th></tr></thead>
+              <tbody id="expensesBody"></tbody>
               <tfoot><tr><th colspan="2">Итого</th><th id="expensesTotal">0.00</th><th></th></tr></tfoot>
             </table>
-          </div>
+          </section>
 
-          <div class="tab-content" id="income-tab">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-              <div class="section-title">Дополнительные доходы</div>
-              <div>
-                <button id="addIncome">+ Добавить</button>
-              </div>
+          <section id="income" class="tab-panel" style="display:none;margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Доходы</div>
+              <div><button id="addIncome">+ Добавить</button></div>
             </div>
-            <table id="incomeTable">
-              <thead><tr><th>Источник</th><th>Тип</th><th>Сумма</th><th width="40"></th></tr></thead>
-              <tbody></tbody>
+            <table aria-label="Таблица доходов">
+              <thead><tr><th>Источник</th><th>Тип</th><th>Сумма</th><th></th></tr></thead>
+              <tbody id="incomeBody"></tbody>
               <tfoot><tr><th colspan="2">Итого</th><th id="incomeTotal">0.00</th><th></th></tr></tfoot>
             </table>
-          </div>
+          </section>
         </div>
       </main>
 
       <aside>
         <div class="card">
-          <div class="section-title">Финансовая сводка</div>
-          <div class="summary">
-            <div class="small-card payroll">
-              <div style="font-size: 13px; color: var(--muted);">Зарплаты</div>
-              <div class="k" id="sumPayroll">0.00</div>
-            </div>
-            <div class="small-card expenses">
-              <div style="font-size: 13px; color: var(--muted);">Расходы</div>
-              <div class="k" id="sumExpenses">0.00</div>
-            </div>
-            <div class="small-card income">
-              <div style="font-size: 13px; color: var(--muted);">Доходы</div>
-              <div class="k" id="sumIncome">0.00</div>
-            </div>
-            <div class="small-card profit">
-              <div style="font-size: 13px; color: var(--muted);">Прибыль</div>
-              <div class="k" id="profit">0.00</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700">Финансовая сводка</div>
+            <div id="authControls" style="display:flex;gap:8px">
+              <button id="authBtn" class="ghost">Войти</button>
             </div>
           </div>
 
-          <div class="firebase-section">
-            <div class="section-title" style="font-size: 16px; margin-bottom: 12px;">Firebase Синхронизация</div>
-            
-            <div id="firebaseStatus" class="auth-status disconnected">
-              🔴 Проверка подключения...
-            </div>
-            
-            <div id="userInfo" style="display: none;">
+          <div style="margin-top:12px">
+            <div id="firebaseStatus" class="auth-status muted">🔴 Не подключено</div>
+            <div id="userBlock" style="display:none">
               <div class="user-info">
                 <div class="user-avatar" id="userAvatar">U</div>
                 <div>
-                  <div id="userEmail" style="font-weight: 500;"></div>
-                  <div style="font-size: 12px; color: var(--muted);" id="userId"></div>
+                  <div id="userEmail" style="font-weight:700"></div>
+                  <div id="userUid" class="muted" style="font-size:13px"></div>
                 </div>
               </div>
             </div>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-              <button id="firebaseLogin" class="ghost">Войти в Firebase</button>
-              <button id="firebaseRegister" class="ghost">Регистрация</button>
-              <button id="firebaseLogout" class="ghost" style="display: none;">Выйти</button>
-            </div>
-            
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <button id="syncToFirebase" class="ghost">💾 Сохранить в облако</button>
-              <button id="loadFromFirebase" class="ghost">📥 Загрузить из облака</button>
-            </div>
+          </div>
 
-            <div class="setup-guide" id="setupGuide">
-              <h4>Настройка Firebase:</h4>
-              <ol>
-                <li>В Firebase Console включите Authentication → Email/Password</li>
-                <li>Создайте Firestore Database в тестовом режиме</li>
-                <li>Нажмите "Регистрация" чтобы создать аккаунт</li>
-              </ol>
+          <div class="summary">
+            <div class="small-card">
+              <div class="muted">Зарплаты</div>
+              <div id="sumPayroll" style="font-size:18px;margin-top:6px">0.00</div>
+            </div>
+            <div class="small-card">
+              <div class="muted">Расходы</div>
+              <div id="sumExpenses" style="font-size:18px;margin-top:6px">0.00</div>
+            </div>
+            <div class="small-card">
+              <div class="muted">Доходы</div>
+              <div id="sumIncome" style="font-size:18px;margin-top:6px">0.00</div>
+            </div>
+            <div class="small-card">
+              <div class="muted">Прибыль</div>
+              <div id="sumProfit" style="font-size:18px;margin-top:6px">0.00</div>
             </div>
           </div>
-        </div>
 
-        <div class="card">
-          <div class="section-title">Примечание</div>
-          <textarea id="reportNote" rows="4" placeholder="Дополнительные заметки..."></textarea>
-        </div>
+          <div style="margin-top:12px">
+            <label>Примечание</label>
+            <textarea id="reportNote" rows="4" placeholder="Дополнительные заметки..."></textarea>
+          </div>
 
-        <div class="card">
-          <div class="section-title">Быстрые действия</div>
-          <div style="display: flex; gap: 10px;">
-            <button id="zeroAll" class="ghost">🔄 Сбросить</button>
-            <button id="loadSample" class="ghost">📋 Пример</button>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="clearBtn" class="ghost">🔄 Сбросить</button>
+            <button id="loadHistoryBtn" class="ghost">📥 Загрузить из облака</button>
           </div>
         </div>
       </aside>
     </div>
+
+    <footer>© CIA SOFT — Firebase-only sync</footer>
   </div>
 
 <script>
-// Firebase config - ПОЛНАЯ КОНФИГУРАЦИЯ
-const firebaseConfig = {
-  apiKey: "AIzaSyAzKU_mZSVJc6nJA1PTZcKuZ9e8SwuZKqU",
-  authDomain: "georges-1c626.firebaseapp.com",
-  databaseURL: "https://georges-1c626-default-rtdb.firebaseio.com",
-  projectId: "georges-1c626",
-  storageBucket: "georges-1c626.firebasestorage.app",
-  messagingSenderId: "490623110927",
-  appId: "1:490623110927:web:48780c508f49b73497387a",
-  measurementId: "G-N20JTJMKSL"
-};
+(() => {
+  'use strict';
 
-// Initialize Firebase
-try {
-  firebase.initializeApp(firebaseConfig);
-  console.log("Firebase инициализирован успешно");
-} catch (error) {
-  console.error("Ошибка инициализации Firebase:", error);
-}
+  // ---------- Firebase config ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyAzKU_mZSVJc6nJA1PTZcKuZ9e8SwuZKqU",
+    authDomain: "georges-1c626.firebaseapp.com",
+    databaseURL: "https://georges-1c626-default-rtdb.firebaseio.com",
+    projectId: "georges-1c626",
+    storageBucket: "georges-1c626.firebasestorage.app",
+    messagingSenderId: "490623110927",
+    appId: "1:490623110927:web:48780c508f49b73497387a",
+    measurementId: "G-N20JTJMKSL"
+  };
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-// Initialize Analytics
-const analytics = firebase.analytics();
-
-// Utils
-const $ = sel => document.querySelector(sel);
-const $$ = sel => document.querySelectorAll(sel);
-const money = v => Number(v || 0).toFixed(2);
-
-// Elements
-const historyBtn = $('#historyBtn');
-const historyPanel = $('#historyPanel');
-const overlay = $('#overlay');
-const closeHistory = $('#closeHistory');
-const historyList = $('#historyList');
-
-// Firebase elements
-const firebaseStatus = $('#firebaseStatus');
-const userInfo = $('#userInfo');
-const userAvatar = $('#userAvatar');
-const userEmail = $('#userEmail');
-const userId = $('#userId');
-const firebaseLogin = $('#firebaseLogin');
-const firebaseRegister = $('#firebaseRegister');
-const firebaseLogout = $('#firebaseLogout');
-const syncToFirebase = $('#syncToFirebase');
-const loadFromFirebase = $('#loadFromFirebase');
-const setupGuide = $('#setupGuide');
-
-const payrollTable = $('#payrollTable tbody');
-const expensesTable = $('#expensesTable tbody');
-const incomeTable = $('#incomeTable tbody');
-const payrollTotalEl = $('#payrollTotal');
-const expensesTotalEl = $('#expensesTotal');
-const incomeTotalEl = $('#incomeTotal');
-const sumPayroll = $('#sumPayroll');
-const sumExpenses = $('#sumExpenses');
-const sumIncome = $('#sumIncome');
-const profitEl = $('#profit');
-const revenueEl = $('#revenue');
-const periodStartEl = $('#periodStart');
-const periodEndEl = $('#periodEnd');
-
-// State
-let state = {
-  periodStart: null,
-  periodEnd: null,
-  revenue: 0,
-  payroll: [],
-  expenses: [],
-  income: [],
-  note: '',
-  id: null
-}
-
-// Firebase state
-let firebaseUser = null;
-let isFirebaseConnected = false;
-
-// Test Firebase connection
-function testFirebaseConnection() {
-  firebaseStatus.textContent = "🟡 Проверка подключения...";
-  
-  // Test if Firebase is properly initialized
-  if (!firebase.apps.length) {
-    firebaseStatus.textContent = "🔴 Firebase не инициализирован";
-    return false;
+  // Initialize
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  } catch (err) {
+    console.error('Firebase init error', err);
   }
-  
-  // Test Firestore connection
-  const testDoc = db.collection('test').doc('connection');
-  testDoc.set({test: true, timestamp: new Date()})
-    .then(() => {
-      firebaseStatus.textContent = "🟢 Firebase подключен";
-      isFirebaseConnected = true;
-      // Clean up test document
-      testDoc.delete();
-    })
-    .catch((error) => {
-      console.error("Ошибка подключения Firebase:", error);
-      firebaseStatus.textContent = "🔴 Ошибка подключения";
-      isFirebaseConnected = false;
-    });
-  
-  return true;
-}
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-// Firebase Authentication
-function initFirebaseAuth() {
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      firebaseUser = user;
-      isFirebaseConnected = true;
-      updateFirebaseUI(true);
-      showToast('Успешный вход в Firebase');
-      // Log login event
-      analytics.logEvent('login');
-    } else {
-      firebaseUser = null;
-      updateFirebaseUI(false);
+  // ---------- Helpers ----------
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const money = v => Number(v || 0).toFixed(2);
+  const nowDate = () => new Date().toISOString().split('T')[0];
+  const debounce = (fn, delay=2500) => {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(()=>fn(...args), delay);
+    };
+  };
+
+  // ---------- State ----------
+  let state = {
+    periodStart: nowDate(),
+    periodEnd: nowDate(),
+    revenue: 0,
+    payroll: [],
+    expenses: [],
+    income: [],
+    note: '',
+    id: null,
+    createdAt: null,
+    updatedAt: null,
+    userId: null
+  };
+
+  let currentUser = null;
+  let autoSaveDebounced = null;
+
+  // ---------- DOM ----------
+  const elements = {
+    // auth modal
+    authModal: $('#authModal'),
+    authEmail: $('#authEmail'),
+    authPassword: $('#authPassword'),
+    loginBtn: $('#loginBtn'),
+    registerBtn: $('#registerBtn'),
+    mainContent: $('#mainContent'),
+    
+    // tabs
+    tabs: $$('.tab'),
+    panels: $$('.tab-panel'),
+    periodStart: $('#periodStart'),
+    periodEnd: $('#periodEnd'),
+    revenue: $('#revenue'),
+    payrollBody: $('#payrollBody'),
+    expensesBody: $('#expensesBody'),
+    incomeBody: $('#incomeBody'),
+    addPayroll: $('#addPayroll'),
+    addExpense: $('#addExpense'),
+    addIncome: $('#addIncome'),
+    payrollTotal: $('#payrollTotal'),
+    expensesTotal: $('#expensesTotal'),
+    incomeTotal: $('#incomeTotal'),
+    sumPayroll: $('#sumPayroll'),
+    sumExpenses: $('#sumExpenses'),
+    sumIncome: $('#sumIncome'),
+    sumProfit: $('#sumProfit'),
+    reportNote: $('#reportNote'),
+    saveBtn: $('#saveBtn'),
+    exportCsv: $('#exportCsv'),
+    clearBtn: $('#clearBtn'),
+    loadHistoryBtn: $('#loadHistoryBtn'),
+    historyBtn: $('#historyBtn'),
+    historyPanel: $('#historyPanel'),
+    overlay: $('#overlay'),
+    closeHistoryBtn: $('#closeHistoryBtn'),
+    historyList: $('#historyList'),
+    firebaseStatus: $('#firebaseStatus'),
+    authBtn: $('#authBtn'),
+    userBlock: $('#userBlock'),
+    userEmail: $('#userEmail'),
+    userUid: $('#userUid'),
+    userAvatar: $('#userAvatar')
+  };
+
+  // ---------- UI utilities ----------
+  function showToast(msg, type='info') {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;right:20px;bottom:20px;padding:10px 12px;border-radius:8px;color:#fff;z-index:1200;max-width:320px;box-shadow:0 6px 20px rgba(2,6,23,.2)`;
+    t.style.background = type === 'error' ? 'var(--danger)' : (type === 'success' ? 'var(--success)' : '#0f172a');
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 3000);
+  }
+
+  function setFirebaseStatus(text, ok=false) {
+    elements.firebaseStatus.textContent = (ok ? '🟢 ' : '🔴 ') + text;
+    elements.firebaseStatus.style.color = ok ? 'var(--success)' : '';
+  }
+
+  // ---------- Auth Modal Functions ----------
+  function showMainApp() {
+    elements.authModal.style.display = 'none';
+    elements.mainContent.style.display = 'block';
+  }
+
+  function showAuthModal() {
+    elements.authModal.style.display = 'flex';
+    elements.mainContent.style.display = 'none';
+  }
+
+  async function handleLogin() {
+    const email = elements.authEmail.value.trim();
+    const password = elements.authPassword.value;
+    
+    if (!email || !password) {
+      showToast('Заполните email и пароль', 'error');
+      return;
     }
-  }, (error) => {
-    console.error("Ошибка аутентификации:", error);
-    firebaseStatus.textContent = "🔴 Ошибка аутентификации";
-  });
-}
-
-function updateFirebaseUI(isSignedIn) {
-  if (isSignedIn) {
-    firebaseStatus.textContent = '🟢 Подключено';
-    firebaseStatus.className = 'auth-status connected';
-    userInfo.style.display = 'block';
-    firebaseLogin.style.display = 'none';
-    firebaseRegister.style.display = 'none';
-    firebaseLogout.style.display = 'block';
-    setupGuide.style.display = 'none';
     
-    // Update user info
-    userEmail.textContent = firebaseUser.email || 'Анонимный пользователь';
-    userId.textContent = `ID: ${firebaseUser.uid.substring(0, 8)}...`;
-    userAvatar.textContent = (firebaseUser.email || 'U').charAt(0).toUpperCase();
-  } else {
-    firebaseStatus.textContent = '🔴 Не авторизован';
-    firebaseStatus.className = 'auth-status disconnected';
-    userInfo.style.display = 'none';
-    firebaseLogin.style.display = 'block';
-    firebaseRegister.style.display = 'block';
-    firebaseLogout.style.display = 'none';
-    setupGuide.style.display = 'block';
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showToast('Вход выполнен успешно', 'success');
+      showMainApp();
+    } catch (err) {
+      console.error('Login error:', err);
+      showToast('Ошибка входа: ' + (err.message || 'Неверные данные'), 'error');
+    }
   }
-}
 
-function signInWithEmail() {
-  const email = prompt('Введите email для входа:');
-  if (!email) return;
-  
-  const password = prompt('Введите пароль:');
-  if (!password) return;
-  
-  auth.signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      showToast('Успешный вход в Firebase');
-    })
-    .catch((error) => {
-      console.error('Ошибка входа:', error);
-      let errorMessage = 'Ошибка входа';
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'Пользователь не найден. Зарегистрируйтесь.';
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Неверный пароль';
-      } else {
-        errorMessage = 'Ошибка входа: ' + error.message;
-      }
-      showToast(errorMessage, 'error');
-    });
-}
-
-function registerWithEmail() {
-  const email = prompt('Введите email для регистрации:');
-  if (!email) return;
-  
-  const password = prompt('Введите пароль (минимум 6 символов):');
-  if (!password) return;
-  
-  if (password.length < 6) {
-    showToast('Пароль должен содержать минимум 6 символов', 'error');
-    return;
+  async function handleRegister() {
+    const email = elements.authEmail.value.trim();
+    const password = elements.authPassword.value;
+    
+    if (!email || !password) {
+      showToast('Заполните email и пароль', 'error');
+      return;
+    }
+    
+    if (password.length < 6) {
+      showToast('Пароль должен быть не менее 6 символов', 'error');
+      return;
+    }
+    
+    try {
+      await auth.createUserWithEmailAndPassword(email, password);
+      showToast('Регистрация успешна!', 'success');
+      showMainApp();
+    } catch (err) {
+      console.error('Register error:', err);
+      showToast('Ошибка регистрации: ' + (err.message || 'Попробуйте другой email'), 'error');
+    }
   }
-  
-  auth.createUserWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      showToast('Аккаунт успешно создан!');
-      // Log registration event
-      analytics.logEvent('sign_up');
-    })
-    .catch((error) => {
-      console.error('Ошибка регистрации:', error);
-      let errorMessage = 'Ошибка регистрации';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Email уже используется';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Неверный формат email';
-      } else {
-        errorMessage = 'Ошибка регистрации: ' + error.message;
-      }
-      showToast(errorMessage, 'error');
-    });
-}
 
-function signOut() {
-  auth.signOut()
-    .then(() => {
-      showToast('Выход из Firebase выполнен');
-    })
-    .catch((error) => {
-      console.error('Ошибка выхода:', error);
-      showToast('Ошибка выхода: ' + error.message, 'error');
-    });
-}
-
-// Firebase Firestore functions
-function saveToFirebase() {
-  if (!isFirebaseConnected || !firebaseUser) {
-    showToast('Сначала войдите в Firebase', 'error');
-    return;
+  // Auto-fill demo credentials for testing
+  function fillDemoCredentials() {
+    elements.authEmail.value = 'demo@cia-soft.ru';
+    elements.authPassword.value = 'demodemo';
   }
-  
-  const userRef = db.collection('users').doc(firebaseUser.uid);
-  const reportsRef = userRef.collection('reports');
-  
-  // Generate ID if doesn't exist
-  if (!state.id) {
-    state.id = generateId();
+
+  // ---------- Rendering ----------
+  function renderTables() {
+    // payroll
+    elements.payrollBody.innerHTML = state.payroll.map((r, idx) => `
+      <tr data-type="payroll" data-idx="${idx}">
+        <td contenteditable="true" data-field="name">${escapeHtml(r.name||'')}</td>
+        <td contenteditable="true" data-field="role">${escapeHtml(r.role||'')}</td>
+        <td contenteditable="true" data-field="amount">${money(r.amount)}</td>
+        <td><button data-action="delete" data-type="payroll" data-idx="${idx}" class="ghost">✖</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="muted">Нет записей</td></tr>';
+
+    // expenses
+    elements.expensesBody.innerHTML = state.expenses.map((r, idx) => `
+      <tr data-type="expenses" data-idx="${idx}">
+        <td contenteditable="true" data-field="category">${escapeHtml(r.category||'')}</td>
+        <td contenteditable="true" data-field="vendor">${escapeHtml(r.vendor||'')}</td>
+        <td contenteditable="true" data-field="amount">${money(r.amount)}</td>
+        <td><button data-action="delete" data-type="expenses" data-idx="${idx}" class="ghost">✖</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="muted">Нет записей</td></tr>';
+
+    // income
+    elements.incomeBody.innerHTML = state.income.map((r, idx) => `
+      <tr data-type="income" data-idx="${idx}">
+        <td contenteditable="true" data-field="source">${escapeHtml(r.source||'')}</td>
+        <td contenteditable="true" data-field="type">${escapeHtml(r.type||'')}</td>
+        <td contenteditable="true" data-field="amount">${money(r.amount)}</td>
+        <td><button data-action="delete" data-type="income" data-idx="${idx}" class="ghost">✖</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="muted">Нет записей</td></tr>';
+
+    updateTotals();
   }
-  
-  // Add timestamp
-  state.updatedAt = new Date().toISOString();
-  state.createdAt = state.createdAt || state.updatedAt;
-  state.userId = firebaseUser.uid;
-  
-  reportsRef.doc(state.id).set(state)
-    .then(() => {
-      showToast('Данные сохранены в Firebase');
-      // Log save event
-      analytics.logEvent('save_to_cloud');
-    })
-    .catch((error) => {
-      console.error('Ошибка сохранения в Firebase:', error);
-      showToast('Ошибка сохранения: ' + error.message, 'error');
-    });
-}
 
-function loadFromFirebase() {
-  if (!isFirebaseConnected || !firebaseUser) {
-    showToast('Сначала войдите в Firebase', 'error');
-    return;
-  }
-  
-  const reportsRef = db.collection('users').doc(firebaseUser.uid).collection('reports');
-  
-  reportsRef.orderBy('updatedAt', 'desc').limit(10).get()
-    .then((querySnapshot) => {
-      const reports = {};
-      
-      if (querySnapshot.empty) {
-        showToast('Нет сохранённых отчётов в облаке');
-        return;
-      }
-      
-      querySnapshot.forEach((doc) => {
-        const report = doc.data();
-        const dateKey = report.periodStart || new Date().toISOString().split('T')[0];
-        
-        if (!reports[dateKey]) {
-          reports[dateKey] = [];
-        }
-        
-        reports[dateKey].push(report);
-      });
-      
-      // Load the most recent report
-      const firstDate = Object.keys(reports)[0];
-      state = reports[firstDate][0];
-      render();
-      showToast('Данные загружены из Firebase');
-      // Log load event
-      analytics.logEvent('load_from_cloud');
-    })
-    .catch((error) => {
-      console.error('Ошибка загрузки из Firebase:', error);
-      showToast('Ошибка загрузки: ' + error.message, 'error');
-    });
-}
-
-// Firebase event listeners
-firebaseLogin.addEventListener('click', signInWithEmail);
-firebaseRegister.addEventListener('click', registerWithEmail);
-firebaseLogout.addEventListener('click', signOut);
-syncToFirebase.addEventListener('click', saveToFirebase);
-loadFromFirebase.addEventListener('click', loadFromFirebase);
-
-// Initialize Firebase connection
-setTimeout(() => {
-  testFirebaseConnection();
-  initFirebaseAuth();
-}, 1000);
-
-// History panel
-historyBtn.addEventListener('click', () => {
-  historyPanel.classList.add('open');
-  overlay.classList.add('active');
-  renderHistoryList();
-});
-
-closeHistory.addEventListener('click', () => {
-  historyPanel.classList.remove('open');
-  overlay.classList.remove('active');
-});
-
-overlay.addEventListener('click', closeHistory.click.bind(closeHistory));
-
-// Tabs
-$$('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    $$('.tab').forEach(t => t.classList.remove('active'));
-    $$('.tab-content').forEach(c => c.classList.remove('active'));
-    tab.classList.add('active');
-    $(`#${tab.dataset.tab}-tab`).classList.add('active');
-  });
-});
-
-// Generate ID
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-// Save/load
-function saveToStorage(){
-  if (!state.id) state.id = generateId();
-  
-  const reports = JSON.parse(localStorage.getItem('cia_soft_reports') || '{}');
-  const dateKey = state.periodStart || new Date().toISOString().split('T')[0];
-  
-  if (!reports[dateKey]) reports[dateKey] = [];
-  
-  const existingIndex = reports[dateKey].findIndex(r => r.id === state.id);
-  if (existingIndex >= 0) {
-    reports[dateKey][existingIndex] = state;
-  } else {
-    reports[dateKey].push(state);
-  }
-  
-  localStorage.setItem('cia_soft_reports', JSON.stringify(reports));
-  showToast('Данные сохранены локально');
-}
-
-function loadFromStorage(){
-  return JSON.parse(localStorage.getItem('cia_soft_reports') || '{}');
-}
-
-function renderHistoryList() {
-  const reports = loadFromStorage();
-  historyList.innerHTML = '';
-  
-  const allReports = [];
-  for (const date in reports) {
-    reports[date].forEach(report => allReports.push({date, report}));
-  }
-  
-  allReports.sort((a, b) => new Date(b.date) - new Date(a.date));
-  
-  if (allReports.length === 0) {
-    historyList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">Нет сохранённых отчётов</div>';
-    return;
-  }
-  
-  allReports.forEach(({date, report}) => {
-    const payrollSum = report.payroll.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-    const expensesSum = report.expenses.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-    const incomeSum = report.income.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-    const revenue = Number(report.revenue) || 0;
+  function updateTotals(){
+    const payrollSum = sumArray(state.payroll, 'amount');
+    const expensesSum = sumArray(state.expenses, 'amount');
+    const incomeSum = sumArray(state.income, 'amount');
+    const revenue = Number(state.revenue)||0;
     const profit = revenue + incomeSum - payrollSum - expensesSum;
-    
-    const item = document.createElement('div');
-    item.className = `history-item ${report.id === state.id ? 'active' : ''}`;
-    item.style.cssText = 'padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer;';
-    item.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 5px;">${formatDate(date)}</div>
-      <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--muted);">
-        <span>Выручка: ${money(revenue)}</span>
-        <span>Прибыль: ${money(profit)}</span>
-      </div>
-    `;
-    item.addEventListener('click', () => {
-      state = JSON.parse(JSON.stringify(report));
-      render();
-      closeHistory.click();
-      showToast('Отчёт загружен');
-    });
-    historyList.appendChild(item);
-  });
-}
 
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('ru-RU');
-}
+    elements.payrollTotal.textContent = money(payrollSum);
+    elements.expensesTotal.textContent = money(expensesSum);
+    elements.incomeTotal.textContent = money(incomeSum);
+    elements.sumPayroll.textContent = money(payrollSum);
+    elements.sumExpenses.textContent = money(expensesSum);
+    elements.sumIncome.textContent = money(incomeSum);
+    elements.sumProfit.textContent = money(profit);
+    elements.sumProfit.style.color = profit < 0 ? 'var(--danger)' : profit > 0 ? 'var(--success)' : '';
+  }
 
-function render(){
-  if (!state.periodStart) state.periodStart = new Date().toISOString().split('T')[0];
-  if (!state.periodEnd) state.periodEnd = new Date().toISOString().split('T')[0];
+  function sumArray(arr, field) {
+    return arr.reduce((s, it) => s + (Number(it[field])||0), 0);
+  }
+
+  function escapeHtml(s='') {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ---------- Events & Delegation ----------
+  // Auth modal events
+  elements.loginBtn.addEventListener('click', handleLogin);
+  elements.registerBtn.addEventListener('click', handleRegister);
   
-  periodStartEl.value = state.periodStart;
-  periodEndEl.value = state.periodEnd;
-  revenueEl.value = state.revenue;
-  $('#reportNote').value = state.note || '';
-
-  // Render tables
-  payrollTable.innerHTML = '';
-  state.payroll.forEach((p, idx) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td contenteditable>${p.name}</td>
-      <td contenteditable>${p.role}</td>
-      <td contenteditable>${money(p.amount)}</td>
-      <td><button onclick="state.payroll.splice(${idx},1); render();" class="ghost">✖</button></td>`;
-    payrollTable.appendChild(tr);
+  // Allow submitting form with Enter key
+  elements.authPassword.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleLogin();
   });
 
-  expensesTable.innerHTML = '';
-  state.expenses.forEach((e, idx) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td contenteditable>${e.category}</td>
-      <td contenteditable>${e.vendor}</td>
-      <td contenteditable>${money(e.amount)}</td>
-      <td><button onclick="state.expenses.splice(${idx},1); render();" class="ghost">✖</button></td>`;
-    expensesTable.appendChild(tr);
+  // Tabs
+  elements.tabs.forEach(tab => tab.addEventListener('click', () => {
+    elements.tabs.forEach(t=>t.classList.remove('active'));
+    elements.panels.forEach(p=>p.style.display='none');
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).style.display = 'block';
+  }));
+
+  // Add row buttons
+  elements.addPayroll.addEventListener('click', () => {
+    state.payroll.push({name:'', role:'', amount:0});
+    renderTables();
+    scheduleAutosave();
+  });
+  elements.addExpense.addEventListener('click', () => {
+    state.expenses.push({category:'', vendor:'', amount:0});
+    renderTables();
+    scheduleAutosave();
+  });
+  elements.addIncome.addEventListener('click', () => {
+    state.income.push({source:'', type:'', amount:0});
+    renderTables();
+    scheduleAutosave();
   });
 
-  incomeTable.innerHTML = '';
-  state.income.forEach((i, idx) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td contenteditable>${i.source}</td>
-      <td contenteditable>${i.type}</td>
-      <td contenteditable>${money(i.amount)}</td>
-      <td><button onclick="state.income.splice(${idx},1); render();" class="ghost">✖</button></td>`;
-    incomeTable.appendChild(tr);
-  });
-
-  updateTotals();
-  attachEditableListeners();
-}
-
-function updateTotals(){
-  const payrollSum = state.payroll.reduce((s,r) => s + (Number(r.amount)||0), 0);
-  const expensesSum = state.expenses.reduce((s,r) => s + (Number(r.amount)||0), 0);
-  const incomeSum = state.income.reduce((s,r) => s + (Number(r.amount)||0), 0);
-  const revenue = Number(state.revenue)||0;
-  const profit = revenue + incomeSum - payrollSum - expensesSum;
-
-  payrollTotalEl.textContent = money(payrollSum);
-  expensesTotalEl.textContent = money(expensesSum);
-  incomeTotalEl.textContent = money(incomeSum);
-  sumPayroll.textContent = money(payrollSum);
-  sumExpenses.textContent = money(expensesSum);
-  sumIncome.textContent = money(incomeSum);
-  profitEl.textContent = money(profit);
-  profitEl.style.color = profit < 0 ? 'var(--danger)' : profit > 0 ? 'var(--success)' : 'var(--muted)';
-}
-
-function attachEditableListeners(){
-  // Table cells
+  // Delegated contenteditable & delete buttons
   document.addEventListener('input', (e) => {
-    if (!e.target.hasAttribute('contenteditable')) return;
-    
     const cell = e.target;
+    if (!cell.hasAttribute('contenteditable')) return;
     const tr = cell.closest('tr');
     if (!tr) return;
-    
-    const idx = Array.from(tr.parentElement.children).indexOf(tr);
-    if (idx < 0) return;
-    
-    const cells = tr.querySelectorAll('[contenteditable]');
-    
-    if (tr.parentElement === payrollTable) {
-      state.payroll[idx] = {
-        name: cells[0].textContent.trim(),
-        role: cells[1].textContent.trim(),
-        amount: parseFloat(cells[2].textContent.replace(',','.')) || 0
-      };
-    } else if (tr.parentElement === expensesTable) {
-      state.expenses[idx] = {
-        category: cells[0].textContent.trim(),
-        vendor: cells[1].textContent.trim(),
-        amount: parseFloat(cells[2].textContent.replace(',','.')) || 0
-      };
-    } else if (tr.parentElement === incomeTable) {
-      state.income[idx] = {
-        source: cells[0].textContent.trim(),
-        type: cells[1].textContent.trim(),
-        amount: parseFloat(cells[2].textContent.replace(',','.')) || 0
-      };
-    }
-    
+    const type = tr.dataset.type;
+    const idx = Number(tr.dataset.idx);
+    const field = cell.dataset.field;
+    if (Number.isNaN(idx) || !type || !field) return;
+
+    const val = field === 'amount' ? parseFloat(cell.textContent.replace(',', '.')) || 0 : cell.textContent.trim();
+    // update state safely
+    if (type === 'payroll' && state.payroll[idx]) state.payroll[idx][field] = val;
+    if (type === 'expenses' && state.expenses[idx]) state.expenses[idx][field] = val;
+    if (type === 'income' && state.income[idx]) state.income[idx][field] = val;
     updateTotals();
+    scheduleAutosave();
   });
 
-  // Note field
-  $('#reportNote').addEventListener('input', (e) => {
-    state.note = e.target.value;
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action="delete"]');
+    if (!btn) return;
+    const type = btn.dataset.type;
+    const idx = Number(btn.dataset.idx);
+    if (type && !Number.isNaN(idx)) {
+      if (type === 'payroll') state.payroll.splice(idx,1);
+      if (type === 'expenses') state.expenses.splice(idx,1);
+      if (type === 'income') state.income.splice(idx,1);
+      renderTables();
+      scheduleAutosave();
+    }
   });
-}
 
-// Actions
-$('#addPayroll').onclick = () => {
-  state.payroll.push({name: 'Новый сотрудник', role: '', amount: 0});
-  render();
-  $('.tab[data-tab="payroll"]').click();
-};
+  // Inputs sync
+  elements.periodStart.addEventListener('change', e => { state.periodStart = e.target.value; scheduleAutosave(); });
+  elements.periodEnd.addEventListener('change', e => { state.periodEnd = e.target.value; scheduleAutosave(); });
+  elements.revenue.addEventListener('input', e => { state.revenue = parseFloat(e.target.value)||0; updateTotals(); scheduleAutosave(); });
+  elements.reportNote.addEventListener('input', e => { state.note = e.target.value; scheduleAutosave(); });
 
-$('#addExpense').onclick = () => {
-  state.expenses.push({category: 'Расходы', vendor: '', amount: 0});
-  render();
-  $('.tab[data-tab="expenses"]').click();
-};
-
-$('#addIncome').onclick = () => {
-  state.income.push({source: 'Доходы', type: '', amount: 0});
-  render();
-  $('.tab[data-tab="income"]').click();
-};
-
-$('#zeroAll').onclick = () => {
-  if(confirm('Сбросить все данные?')) {
+  // Clear
+  elements.clearBtn.addEventListener('click', () => {
+    if (!confirm('Сбросить все поля и таблицы?')) return;
     state = {
-      periodStart: new Date().toISOString().split('T')[0],
-      periodEnd: new Date().toISOString().split('T')[0],
+      periodStart: nowDate(),
+      periodEnd: nowDate(),
       revenue: 0,
       payroll: [],
       expenses: [],
       income: [],
       note: '',
-      id: generateId()
+      id: null,
+      createdAt: null,
+      updatedAt: null,
+      userId: null
     };
-    render();
+    renderAll();
+  });
+
+  // Show history panel
+  elements.historyBtn.addEventListener('click', openHistoryPanel);
+  elements.closeHistoryBtn.addEventListener('click', closeHistoryPanel);
+  elements.overlay.addEventListener('click', closeHistoryPanel);
+
+  // Export CSV
+  elements.exportCsv.addEventListener('click', () => {
+    const rows = [
+      ['Период', state.periodStart, state.periodEnd],
+      [],
+      ['Зарплаты'],
+      ['Имя','Должность','Сумма'],
+      ...state.payroll.map(p => [p.name||'', p.role||'', money(p.amount)]),
+      [],
+      ['Расходы'],
+      ['Категория','Получатель','Сумма'],
+      ...state.expenses.map(r => [r.category||'', r.vendor||'', money(r.amount)]),
+      [],
+      ['Доходы'],
+      ['Источник','Тип','Сумма'],
+      ...state.income.map(i => [i.source||'', i.type||'', money(i.amount)]),
+      [],
+      ['Выручка', money(state.revenue)],
+      ['Итого зарплаты', money(sumArray(state.payroll,'amount'))],
+      ['Итого расходы', money(sumArray(state.expenses,'amount'))],
+      ['Итого доходы', money(sumArray(state.income,'amount'))],
+      ['Прибыль', money((Number(state.revenue)||0) + sumArray(state.income,'amount') - sumArray(state.payroll,'amount') - sumArray(state.expenses,'amount'))]
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c||'')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `report_${state.periodStart || nowDate()}.csv`; a.click();
+    showToast('CSV экспортирован', 'success');
+  });
+
+  // Manual save button
+  elements.saveBtn.addEventListener('click', async () => {
+    try {
+      await saveToFirestore();
+      showToast('Отчёт сохранён в облако', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Ошибка сохранения: ' + (err.message || ''), 'error');
+    }
+  });
+
+  // Load history from Firestore
+  elements.loadHistoryBtn.addEventListener('click', fetchHistoryFromFirestore);
+
+  // Auth button (sign in / sign out)
+  elements.authBtn.addEventListener('click', async () => {
+    if (!currentUser) {
+      showAuthModal();
+    } else {
+      try {
+        await auth.signOut();
+        showToast('Выход выполнен', 'success');
+      } catch (err) {
+        showToast('Ошибка выхода: ' + (err.message||''), 'error');
+      }
+    }
+  });
+
+  // ---------- History panel ----------
+  function openHistoryPanel(){
+    elements.historyPanel.classList.add('open');
+    elements.overlay.classList.add('active');
+    elements.historyPanel.setAttribute('aria-hidden', 'false');
+    // load from firestore
+    fetchHistoryFromFirestore();
   }
-};
-
-$('#loadSample').onclick = () => {
-  state = {
-    periodStart: new Date().toISOString().split('T')[0],
-    periodEnd: new Date().toISOString().split('T')[0],
-    revenue: 125000,
-    payroll: [
-      {name: 'Иванов А.П.', role: 'Шеф-повар', amount: 35000},
-      {name: 'Петрова М.И.', role: 'Официант', amount: 15000}
-    ],
-    expenses: [
-      {category: 'Поставщики', vendor: 'ООО Продукты', amount: 25000},
-      {category: 'Аренда', vendor: 'АРЕНДОДАТЕЛЬ', amount: 20000}
-    ],
-    income: [
-      {source: 'Кейтеринг', type: 'Услуги', amount: 15000}
-    ],
-    note: 'Пример данных',
-    id: generateId()
-  };
-  render();
-};
-
-$('#saveBtn').onclick = () => {
-  saveToStorage();
-  if (isFirebaseConnected && firebaseUser) {
-    saveToFirebase();
+  function closeHistoryPanel(){
+    elements.historyPanel.classList.remove('open');
+    elements.overlay.classList.remove('active');
+    elements.historyPanel.setAttribute('aria-hidden', 'true');
   }
-};
 
-$('#exportCsv').onclick = () => {
-  const rows = [
-    ['Период', state.periodStart, state.periodEnd],
-    [],
-    ['Зарплаты'],
-    ['Имя', 'Должность', 'Сумма'],
-    ...state.payroll.map(p => [p.name, p.role, money(p.amount)]),
-    [],
-    ['Расходы'],
-    ['Категория', 'Получатель', 'Сумма'],
-    ...state.expenses.map(e => [e.category, e.vendor, money(e.amount)]),
-    [],
-    ['Доходы'],
-    ['Источник', 'Тип', 'Сумма'],
-    ...state.income.map(i => [i.source, i.type, money(i.amount)]),
-    [],
-    ['Выручка', money(state.revenue)],
-    ['Итого зарплаты', money(state.payroll.reduce((s,r) => s + (Number(r.amount)||0), 0))],
-    ['Итого расходы', money(state.expenses.reduce((s,r) => s + (Number(r.amount)||0), 0))],
-    ['Итого доходы', money(state.income.reduce((s,r) => s + (Number(r.amount)||0), 0))],
-    ['Прибыль', money((Number(state.revenue)||0) + state.income.reduce((s,r) => s + (Number(r.amount)||0), 0) - state.payroll.reduce((s,r) => s + (Number(r.amount)||0), 0) - state.expenses.reduce((s,r) => s + (Number(r.amount)||0), 0))]
-  ];
-
-  const csv = rows.map(r => r.map(cell => `"${String(cell||'')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type: 'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'report.csv';
-  a.click();
-  showToast('CSV экспортирован');
-};
-
-// Input sync
-periodStartEl.onchange = e => state.periodStart = e.target.value;
-periodEndEl.onchange = e => state.periodEnd = e.target.value;
-revenueEl.oninput = e => { state.revenue = parseFloat(e.target.value)||0; updateTotals(); };
-
-// Toast
-function showToast(msg, type = '') {
-  const toast = document.createElement('div');
-  toast.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: ${type === 'error' ? 'var(--danger)' : '#0f172a'}; color: white; padding: 10px 15px; border-radius: 8px; z-index: 1000;`;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// Initial load
-const reports = loadFromStorage();
-const today = new Date().toISOString().split('T')[0];
-
-if (Object.keys(reports).length > 0 && reports[today] && reports[today].length > 0) {
-  state = reports[today][reports[today].length - 1];
-} else {
-  state.id = generateId();
-  state.periodStart = today;
-  state.periodEnd = today;
-}
-
-render();
-
-// Auto-save
-setInterval(() => {
-  saveToStorage();
-  if (isFirebaseConnected && firebaseUser) {
-    saveToFirebase();
+  async function fetchHistoryFromFirestore(){
+    if (!currentUser) {
+      showToast('Сначала войдите в Firebase чтобы загрузить историю', 'error');
+      return;
+    }
+    try {
+      setFirebaseStatus('Загрузка истории...', true);
+      const ref = db.collection('users').doc(currentUser.uid).collection('reports').orderBy('updatedAt','desc').limit(50);
+      const snap = await ref.get();
+      elements.historyList.innerHTML = '';
+      if (snap.empty) {
+        elements.historyList.innerHTML = `<div class="muted">Нет отчётов в облаке</div>`;
+        return;
+      }
+      snap.forEach(doc => {
+        const r = doc.data();
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:8px;border:1px solid var(--border);border-radius:8px;cursor:pointer';
+        const title = r.periodStart || r.createdAt?.split('T')[0] || '';
+        const payrollSum = sumArray(r.payroll||[], 'amount');
+        const expensesSum = sumArray(r.expenses||[], 'amount');
+        const incomeSum = sumArray(r.income||[], 'amount');
+        const revenue = Number(r.revenue)||0;
+        const profit = revenue + incomeSum - payrollSum - expensesSum;
+        div.innerHTML = `<div style="font-weight:700">${title}</div>
+          <div style="font-size:13px;color:var(--muted);display:flex;justify-content:space-between;margin-top:6px">
+            <span>Выручка: ${money(revenue)}</span><span>Прибыль: ${money(profit)}</span>
+          </div>`;
+        div.addEventListener('click', () => {
+          // load into state
+          state = {
+            periodStart: r.periodStart || nowDate(),
+            periodEnd: r.periodEnd || nowDate(),
+            revenue: Number(r.revenue) || 0,
+            payroll: Array.isArray(r.payroll) ? r.payroll : [],
+            expenses: Array.isArray(r.expenses) ? r.expenses : [],
+            income: Array.isArray(r.income) ? r.income : [],
+            note: r.note || '',
+            id: r.id || doc.id,
+            createdAt: r.createdAt || null,
+            updatedAt: r.updatedAt || null,
+            userId: currentUser.uid
+          };
+          renderAll();
+          closeHistoryPanel();
+          showToast('Отчёт загружен', 'success');
+        });
+        elements.historyList.appendChild(div);
+      });
+      setFirebaseStatus('История загружена', true);
+    } catch (err) {
+      console.error(err);
+      setFirebaseStatus('Ошибка загрузки истории', false);
+      showToast('Ошибка загрузки истории: ' + (err.message||''), 'error');
+    }
   }
-}, 20000);
+
+  // ---------- Firestore save/load ----------
+  function generateId(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+  }
+
+  async function saveToFirestore() {
+    if (!currentUser) throw new Error('Сначала войдите в Firebase');
+    // prepare record
+    if (!state.id) state.id = generateId();
+    state.userId = currentUser.uid;
+    state.updatedAt = new Date().toISOString();
+    state.createdAt = state.createdAt || state.updatedAt;
+
+    // sanitize numeric fields
+    state.payroll = (state.payroll||[]).map(r => ({name:r.name||'', role:r.role||'', amount: Number(r.amount)||0}));
+    state.expenses = (state.expenses||[]).map(r => ({category:r.category||'', vendor:r.vendor||'', amount: Number(r.amount)||0}));
+    state.income = (state.income||[]).map(r => ({source:r.source||'', type:r.type||'', amount: Number(r.amount)||0}));
+    state.revenue = Number(state.revenue)||0;
+
+    const userRef = db.collection('users').doc(currentUser.uid);
+    const reportsRef = userRef.collection('reports');
+    await reportsRef.doc(state.id).set(state, {merge:true});
+    return true;
+  }
+
+  // Autosave (debounced)
+  async function autosaveIfSigned() {
+    if (!currentUser) return;
+    try {
+      await saveToFirestore();
+      setFirebaseStatus('Данные синхронизированы', true);
+    } catch (err) {
+      console.error('autosave error', err);
+      setFirebaseStatus('Ошибка синхронизации', false);
+    }
+  }
+  function scheduleAutosave() {
+    if (!autoSaveDebounced) autoSaveDebounced = debounce(autosaveIfSigned, 2500);
+    autoSaveDebounced();
+  }
+
+  // ---------- Auth state ----------
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+      elements.userBlock.style.display = 'block';
+      elements.userEmail.textContent = user.email || 'Аноним';
+      elements.userUid.textContent = `ID: ${user.uid.slice(0,8)}...`;
+      elements.userAvatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
+      elements.authBtn.textContent = 'Выйти';
+      setFirebaseStatus('Подключено', true);
+      showMainApp();
+    } else {
+      elements.userBlock.style.display = 'none';
+      elements.authBtn.textContent = 'Войти';
+      setFirebaseStatus('Не авторизован', false);
+      showAuthModal();
+    }
+  });
+
+  // Test basic Firestore connection
+  async function testConnection() {
+    try {
+      await db.collection('__test__').doc('__ping__').set({ts: new Date().toISOString()});
+      setFirebaseStatus('Firebase доступен', true);
+      // cleanup optional
+      try { await db.collection('__test__').doc('__ping__').delete(); } catch(e){}
+    } catch (err) {
+      console.warn('Firestore test failed', err);
+      setFirebaseStatus('Ошибка доступа к Firebase', false);
+    }
+  }
+  testConnection();
+
+  // ---------- Render everything ----------
+  function renderAll(){
+    elements.periodStart.value = state.periodStart || nowDate();
+    elements.periodEnd.value = state.periodEnd || nowDate();
+    elements.revenue.value = state.revenue || 0;
+    elements.reportNote.value = state.note || '';
+    renderTables();
+  }
+
+  // ---------- Init ----------
+  (function init(){
+    // Auto-fill demo credentials for easier testing
+    fillDemoCredentials();
+    
+    // initial render
+    renderAll();
+    
+    // Show auth modal by default (will be hidden if user is already logged in)
+    showAuthModal();
+  })();
+
+})();
 </script>
 </body>
 </html>
